@@ -3,189 +3,141 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TMDB Gallery</title>
+    <title>TMDB Cinematic Gallery</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://npmcdn.com/parse/dist/parse.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
-        /* Base Colors & Layout */
         :root {
-            --primary: #1e3a8a; /* Dark Blue */
-            --primary-light: #2563eb; /* Cobalt Blue */
-            --secondary: #3b82f6; /* Lighter Blue */
-            --bg-dark: #0f172a; /* Slate 900 */
-            --bg-medium: #1e293b; /* Slate 800 */
-            --text-light: #f1f5f9; /* Slate 100 */
-            --text-medium: #94a3b8; /* Slate 400 */
+            --primary: #2563eb;
+            --accent: #3b82f6;
+            --bg-deep: #020617;
+            --bg-card: #1e293b;
+            --text-main: #f8fafc;
+            --text-dim: #94a3b8;
         }
 
         body {
-            background-color: var(--bg-dark);
-            color: var(--text-light);
-            font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+            background-color: var(--bg-deep);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            scroll-behavior: smooth;
         }
 
-        /* Utility Classes */
-        .text-primary { color: var(--primary-light); }
-        .bg-primary { background-color: var(--primary); }
-        .bg-primary-light { background-color: var(--primary-light); }
-        .border-primary-light { border-color: var(--primary-light); }
-        .hover\:bg-primary-light:hover { background-color: var(--primary-light); }
-        .hover\:text-primary-light:hover { color: var(--primary-light); }
-        
-        /* Navigation & Search */
+        /* Modern Floating Nav */
         #nav-bar-island {
-            background-color: var(--bg-medium);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 9999px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-            padding: 0.5rem 1.5rem;
+            padding: 0.6rem 2rem;
             position: fixed;
-            top: 1rem;
+            top: 1.5rem;
             left: 50%;
             transform: translateX(-50%);
-            z-index: 50;
+            z-index: 100;
             display: flex;
             align-items: center;
-            gap: 1.5rem;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            gap: 2rem;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
         }
+
         .nav-link {
-            transition: color 0.2s, transform 0.2s;
-            cursor: pointer;
+            font-weight: 600;
+            color: var(--text-dim);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             display: flex;
             align-items: center;
             gap: 0.5rem;
-            padding: 0.5rem 0;
-        }
-        .nav-link.active, .nav-link:hover {
-            color: var(--secondary);
-            transform: translateY(-2px);
-        }
-        .nav-link svg {
-            width: 1.5rem;
-            height: 1.5rem;
         }
 
-        /* Player & Carousel */
-        .player-area-container {
-            background-color: var(--bg-medium);
-            border-radius: 0.75rem;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-            padding: 1.5rem;
-            margin-bottom: 2rem;
+        .nav-link.active {
+            color: white;
+            text-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
         }
-        #videoPlayer, #carouselContainer {
-            min-height: 400px;
+
+        .nav-link:hover {
+            color: var(--accent);
         }
-        #videoPlayer.hidden { display: none; }
-        #carouselContainer { display: none; position: relative; }
-        #carouselContainer.active { display: block; }
+
+        /* Carousel Styles */
+        #carouselContainer {
+            position: relative;
+            overflow: hidden;
+            border-radius: 1.5rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+        }
+
         .carousel-slide {
-            width: 100%;
-            height: 100%;
+            position: absolute;
+            inset: 0;
             background-size: cover;
             background-position: center;
-            border-radius: 0.75rem;
-            position: absolute;
-            top: 0;
-            left: 0;
             opacity: 0;
-            transition: opacity 1s ease-in-out;
+            transition: opacity 0.8s ease-in-out, transform 10s linear;
             cursor: pointer;
         }
-        .carousel-slide.active { opacity: 1; }
+
+        .carousel-slide.active {
+            opacity: 1;
+            transform: scale(1.05);
+        }
+
         .carousel-overlay {
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 50%);
-            border-radius: 0.75rem;
+            inset: 0;
+            background: linear-gradient(0deg, rgba(2, 6, 23, 0.95) 0%, rgba(2, 6, 23, 0.4) 40%, transparent 100%);
             display: flex;
             flex-direction: column;
             justify-content: flex-end;
-            padding: 2rem;
-        }
-        .carousel-dots {
-            position: absolute;
-            bottom: 1rem;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            gap: 0.5rem;
-        }
-        .carousel-dot {
-            width: 8px;
-            height: 8px;
-            background-color: rgba(255, 255, 255, 0.5);
-            border-radius: 50%;
-            transition: background-color 0.3s;
-            cursor: pointer;
-        }
-        .carousel-dot.active { background-color: var(--primary-light); }
-        .play-button-overlay {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 6rem;
-            height: 6rem;
-            border-radius: 50%;
-            background-color: rgba(0, 0, 0, 0.5);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: background-color 0.3s;
-        }
-        .play-button-overlay:hover {
-            background-color: rgba(0, 0, 0, 0.7);
-        }
-        .play-button-overlay svg {
-            width: 3rem;
-            height: 3rem;
-            color: white;
+            padding: 3rem;
         }
 
-        /* Now Playing */
-        .now-playing-container {
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            height: 100%;
+        /* Player Controls Card */
+        .glass-card {
+            background: rgba(30, 41, 59, 0.5);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 1.25rem;
         }
-        .now-playing-info {
-            display: flex;
-            align-items: flex-start;
-            gap: 1rem;
-            margin-bottom: 1rem;
+
+        /* Custom Selects */
+        select {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2394a3b8' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center;
+            background-size: 1.5em 1.5em;
+            padding-right: 2.5rem;
         }
-        .now-playing-info img {
-            width: 60px;
-            height: 90px;
-            border-radius: 0.5rem;
-            object-fit: cover;
+
+        /* Gallery Cards */
+        .gallery-card {
+            background: var(--bg-card);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border-radius: 1rem;
+            position: relative;
+            z-index: 1;
         }
-        .now-playing-details {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            flex: 1;
-            min-width: 0; /* Add this to make the flex item shrink */
+
+        .gallery-card:hover {
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 0 20px rgba(37, 99, 235, 0.3);
+            z-index: 10;
         }
-        #nowPlayingTitle {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: var(--text-light);
-            margin-bottom: 0.25rem;
+
+        .gallery-card img {
+            border-radius: 1rem 1rem 0 0;
+            transition: opacity 0.3s;
         }
-        #nowPlayingSubtitle {
-            color: var(--text-medium);
-            font-size: 0.9rem;
-        }
-        
-        /* New line-clamp utility for text truncation */
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-deep); }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--primary); }
+
         .line-clamp-3 {
             display: -webkit-box;
             -webkit-line-clamp: 3;
@@ -193,292 +145,134 @@
             overflow: hidden;
         }
 
-        /* Continue Watching */
-        #continueWatchingSection {
-            border: none;
-            padding: 0;
-            box-shadow: none;
-        }
-        #continueWatchingSection h2 {
-            margin-bottom: 1rem;
-        }
-        #continueWatchingContainer {
-            display: flex;
-            overflow-x: auto;
-            gap: 1rem;
-            padding-bottom: 1rem;
-            scrollbar-width: thin;
-            scrollbar-color: var(--primary-light) transparent;
-        }
-        #continueWatchingContainer::-webkit-scrollbar {
-            height: 8px;
-        }
-        #continueWatchingContainer::-webkit-scrollbar-thumb {
-            background-color: var(--primary-light);
-            border-radius: 9999px;
-        }
-        #continueWatchingContainer::-webkit-scrollbar-track {
-            background-color: transparent;
-        }
-        .continue-watching-card {
-            width: 150px;
-            flex-shrink: 0;
-            background-color: var(--bg-medium);
-            border-radius: 0.5rem;
-            overflow: hidden;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-            transition: transform 0.3s ease-in-out;
-            cursor: pointer;
-            position: relative;
-        }
-        .continue-watching-card:hover {
-            transform: translateY(-5px);
-        }
-        .continue-watching-card .image-container {
-            position: relative;
-        }
-        .continue-watching-card img {
-            width: 100%;
-            height: 225px;
-            object-fit: cover;
-        }
-        .continue-watching-card .progress-overlay {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: 4px;
-            background-color: rgba(0, 0, 0, 0.5);
-        }
-        .continue-watching-card .progress-bar {
-            height: 100%;
-            background-color: var(--primary-light);
-        }
-        .continue-watching-card .title-area {
-            padding: 0.75rem;
-            text-align: center;
-        }
-        .continue-watching-card .title {
-            font-size: 0.9rem;
-            font-weight: 600;
-            color: var(--text-light);
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        .continue-watching-card .progress {
-            font-size: 0.7rem;
-            color: var(--text-medium);
-            margin-top: 0.25rem;
-        }
-        .close-btn {
-            position: absolute;
-            top: 4px;
-            right: 4px;
-            z-index: 10;
-            color: var(--text-light);
-            background: rgba(0, 0, 0, 0.5);
-            border: none;
-            border-radius: 9999px;
-            padding: 0 7px 2px 7px;
-            font-size: 1rem;
-            font-weight: bold;
-            line-height: 1;
-            cursor: pointer;
-            opacity: 0.85;
-            transition: background 0.2s, color 0.2s;
-        }
-        .close-btn:hover {
-            background: var(--primary-light);
-            color: white;
-            opacity: 1;
+        /* Animation */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
-        /* Dropdowns & Player Controls */
-        #player-controls {
-            display: grid;
-            gap: 1rem;
-        }
-        .dropdown-group {
-            position: relative;
-        }
-        .dropdown-label {
-            position: absolute;
-            top: -0.75rem;
-            left: 0.75rem;
-            background-color: var(--bg-medium);
-            padding: 0 0.25rem;
-            font-size: 0.75rem;
-            color: var(--text-medium);
-        }
-        select {
-            width: 100%;
-            background-color: var(--bg-dark);
-            border: 1px solid var(--text-medium);
-            border-radius: 0.5rem;
-            padding: 0.75rem;
-            font-size: 1rem;
-            color: var(--text-light);
-            transition: border-color 0.2s, box-shadow 0.2s;
-            appearance: none;
-            background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="white"%3e%3cpath fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"%3e%3c/path%3e%3c/svg%3e');
-            background-repeat: no-repeat;
-            background-position: right 0.75rem center;
-            background-size: 1rem;
-        }
-        select:focus {
-            outline: none;
-            border-color: var(--primary-light);
-            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
-        }
-
-        /* General UI components */
-        #galleryTitle {
-            color: var(--secondary);
-        }
-        .search-container {
-            position: relative;
-            max-width: 40rem;
-            margin: 0 auto;
-        }
-        #searchInput {
-            width: 100%;
-            border-radius: 9999px;
-            background-color: var(--bg-medium);
-            border: 1px solid transparent;
-            transition: border-color 0.2s, box-shadow 0.2s;
-        }
-        #searchInput:focus {
-            border-color: var(--primary-light);
-            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
-        }
-
-        /* Gallery Cards */
-        .gallery-card {
-            background-color: var(--bg-medium);
-            border-radius: 0.5rem;
-            overflow: hidden;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-            transition: transform 0.3s ease-in-out;
-            cursor: pointer;
-        }
-        .gallery-card:hover {
-            transform: scale(1.05);
-        }
-        .gallery-card img {
-            width: 100%;
-            height: auto;
-        }
-        .gallery-card h3 {
-            font-size: 1rem;
-            font-weight: 600;
-            color: var(--text-light);
-        }
-        .gallery-card p {
-            font-size: 0.875rem;
-            color: var(--text-medium);
-        }
-        .px-4.py-2.rounded-full.font-medium.transition-colors.duration-200 {
-            transition: background-color 0.2s, color 0.2s;
-        }
+        .fade-in { animation: fadeIn 0.5s ease-out forwards; }
     </style>
-    <script src="https://cdn.jsdelivr.net/npm/@heroicons/react/24/outline"></script>
 </head>
-<body class="bg-slate-900 text-slate-100 font-sans">
+<body>
 
-    <header class="p-4 flex flex-col items-center justify-center">
-        <div id="nav-bar-island" class="flex items-center space-x-4">
+    <header>
+        <nav id="nav-bar-island">
             <a id="showMoviesBtn" class="nav-link active">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5l4.72-4.72a.75.75 0 011.28.53v11.38a.75.75 0 01-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 002.25-2.25v-9a2.25 2.25 0 00-2.25-2.25h-9A2.25 2.25 0 002.25 7.5v9A2.25 2.25 0 004.5 18.75z" />
-                </svg>
+                <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M18 4l2 4h-3l-2-4h-2l2 4h-3l-2-4H8l2 4H7L5 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4h-4z"/></svg>
                 Movies
             </a>
             <a id="showTvBtn" class="nav-link">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="2" y="7" width="20" height="15" rx="2" ry="2"></rect>
-                    <polyline points="17 2 12 7 7 2"></polyline>
-                </svg>
+                <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M21 6h-7.59l3.29-3.29L16 2l-4 4-4-4-.71.71L10.59 6H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 14H3V8h18v12zM9 10v8l7-4z"/></svg>
                 TV Shows
             </a>
-        </div>
+        </nav>
     </header>
 
-    <main class="p-4 md:p-8 pt-28">
-        <section class="mb-8 flex flex-col md:flex-row items-center justify-center space-y-4 md:space-y-0 md:space-x-4">
-            <div class="search-container w-full">
-                <input type="text" id="searchInput" placeholder="Search for movies or TV shows..." class="w-full px-4 py-2 pr-10 rounded-full bg-slate-800 text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-secondary">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
+    <main class="max-w-[1600px] mx-auto px-4 md:px-8 pt-32 pb-12">
+        
+        <!-- Search Bar -->
+        <section class="mb-12">
+            <div class="relative max-w-2xl mx-auto group">
+                <input type="text" id="searchInput" placeholder="Search for titles..." 
+                    class="w-full h-14 pl-14 pr-6 rounded-2xl bg-slate-800/50 border border-slate-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-slate-800 transition-all text-lg">
+                <svg class="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                 </svg>
             </div>
         </section>
 
-        <section id="playerContainer" class="player-area-container mb-8">
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div class="aspect-video w-full lg:col-span-2 relative">
-                    <iframe id="videoPlayer" src="" frameborder="5" sandbox="allow-same-origin allow-scripts" allowfullscreen class="w-full h-full rounded-lg"></iframe>
-                    <div id="carouselContainer" class="aspect-video w-full h-full rounded-lg">
-                        <div class="carousel-dots"></div>
+        <!-- Player / Hero Section -->
+        <section id="playerContainer" class="mb-16">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                <!-- Media Area -->
+                <div class="lg:col-span-8 relative aspect-video glass-card overflow-hidden shadow-2xl">
+                    <iframe id="videoPlayer" src="" frameborder="0" sandbox="allow-same-origin allow-scripts" allowfullscreen 
+                        class="hidden w-full h-full"></iframe>
+                    
+                    <div id="carouselContainer" class="w-full h-full bg-slate-900">
+                        <div class="carousel-dots absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex gap-2"></div>
                     </div>
                 </div>
                 
-                <div class="lg:col-span-1 flex flex-col space-y-4">
-                    <div id="nowPlayingContainer" class="now-playing-container" style="display: none;">
-                        <div class="now-playing-info">
-                            <img id="nowPlayingPoster" src="https://via.placeholder.com/60x90/1e293b/94a3b8?text=Poster" alt="Now Playing Poster" class="rounded-lg">
-                            <div class="now-playing-details">
-                                <h3 id="nowPlayingTitle" class="truncate">Now Playing</h3>
-                                <p id="nowPlayingSubtitle" class="truncate"></p>
-                                <p id="nowPlayingOverview" class="text-sm text-slate-300 mt-2 line-clamp-3"></p>
+                <!-- Info Area -->
+                <div class="lg:col-span-4 flex flex-col h-full">
+                    <div id="nowPlayingContainer" class="glass-card p-6 flex flex-col h-full" style="display: none;">
+                        <div class="flex gap-4 mb-6">
+                            <img id="nowPlayingPoster" src="" class="w-24 h-36 rounded-lg object-cover shadow-lg border border-slate-700" alt="">
+                            <div class="flex-1 min-w-0">
+                                <h2 id="nowPlayingTitle" class="text-2xl font-bold truncate mb-1">Title</h2>
+                                <p id="nowPlayingSubtitle" class="text-blue-400 font-semibold text-sm mb-2"></p>
+                                <div class="flex flex-wrap gap-2 mb-2">
+                                    <span class="px-2 py-0.5 bg-blue-500/20 text-blue-400 text-xs rounded border border-blue-500/30 uppercase tracking-widest font-bold">4K HDR</span>
+                                </div>
                             </div>
                         </div>
-                        <div id="player-controls">
-                            <div class="dropdown-group">
-                                <label for="sourceSelector" class="dropdown-label">Source</label>
-                                <select id="sourceSelector" class="bg-slate-800 border-slate-400 text-slate-100 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-primary-light"></select>
+                        
+                        <p id="nowPlayingOverview" class="text-slate-400 text-sm mb-8 line-clamp-3 italic leading-relaxed"></p>
+
+                        <div class="mt-auto space-y-4">
+                            <div class="relative">
+                                <label class="text-[10px] uppercase tracking-tighter text-slate-500 font-bold absolute -top-2 left-3 bg-slate-800 px-1">Provider</label>
+                                <select id="sourceSelector" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none"></select>
                             </div>
-                            <div id="episodeSelector" class="hidden grid grid-cols-2 gap-4">
-                                <div class="dropdown-group">
-                                    <label for="seasonSelect" class="dropdown-label">Season</label>
-                                    <select id="seasonSelect" class="bg-slate-800 border-slate-400 text-slate-100 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-primary-light"></select>
+                            
+                            <div id="episodeSelector" class="hidden grid grid-cols-2 gap-3">
+                                <div class="relative">
+                                    <label class="text-[10px] uppercase tracking-tighter text-slate-500 font-bold absolute -top-2 left-3 bg-slate-800 px-1">Season</label>
+                                    <select id="seasonSelect" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none"></select>
                                 </div>
-                                <div class="dropdown-group">
-                                    <label for="episodeSelect" class="dropdown-label">Episode</label>
-                                    <select id="episodeSelect" class="bg-slate-800 border-slate-400 text-slate-100 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-primary-light"></select>
+                                <div class="relative">
+                                    <label class="text-[10px] uppercase tracking-tighter text-slate-500 font-bold absolute -top-2 left-3 bg-slate-800 px-1">Episode</label>
+                                    <select id="episodeSelect" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none"></select>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div id="selectPrompt" class="flex flex-col items-center justify-center h-full text-center text-slate-400">
 
-                        <p class="text-lg font-semibold">Select a movie or TV show to play</p>
+                    <div id="selectPrompt" class="glass-card p-12 flex flex-col items-center justify-center text-center h-full">
+                        <div class="w-20 h-20 rounded-full bg-blue-500/10 flex items-center justify-center mb-4">
+                            <svg class="text-blue-500" width="32" height="32" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        </div>
+                        <h3 class="text-xl font-bold mb-2">Ready to Watch?</h3>
+                        <p class="text-slate-500 text-sm">Select any title from the gallery below to start streaming.</p>
                     </div>
                 </div>
             </div>
         </section>
-        
-        <section id="continueWatchingSection" class="mb-8" style="display: none;">
-            <h2 class="text-xl font-semibold mb-4 text-slate-400">Continue Watching</h2>
-            <div id="continueWatchingContainer"></div>
-        </section>
-        
-        <section>
-            <h2 id="galleryTitle" class="text-2xl font-semibold mb-4 text-center">Popular Movies</h2>
-            <div id="galleryContainer" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4"></div>
-            <div id="pagination" class="flex justify-center items-center space-x-4 mt-8">
-                <button id="prevPage" class="px-4 py-2 bg-slate-700 text-slate-300 rounded-full hover:bg-slate-600 transition-colors duration-200">Previous</button>
-                <span id="pageInfo" class="text-slate-400">Page 1 of 1</span>
-                <button id="nextPage" class="px-4 py-2 bg-primary-light text-white rounded-full hover:bg-primary transition-colors duration-200">Next</button>
+
+        <!-- Continue Watching -->
+        <section id="continueWatchingSection" class="mb-16 hidden">
+            <div class="flex items-center gap-3 mb-6">
+                <div class="w-1 h-6 bg-blue-500 rounded-full"></div>
+                <h2 class="text-xl font-bold tracking-tight">Jump Back In</h2>
             </div>
+            <div id="continueWatchingContainer" class="flex overflow-x-auto gap-6 pb-6 scrollbar-hide"></div>
+        </section>
+
+        <!-- Main Gallery -->
+        <section>
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+                <h2 id="galleryTitle" class="text-3xl font-black tracking-tighter">Popular Movies</h2>
+                <div id="pagination" class="flex items-center gap-4 bg-slate-800/50 p-1.5 rounded-full border border-slate-700">
+                    <button id="prevPage" class="p-2 hover:bg-slate-700 rounded-full disabled:opacity-30 transition-colors">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7"/></svg>
+                    </button>
+                    <span id="pageInfo" class="text-xs font-bold uppercase tracking-widest text-slate-400">Page 1 / 1</span>
+                    <button id="nextPage" class="p-2 bg-blue-600 hover:bg-blue-500 rounded-full transition-colors">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>
+                    </button>
+                </div>
+            </div>
+            
+            <div id="galleryContainer" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-7 gap-6"></div>
         </section>
     </main>
 
     <script>
-        // ==== ENTER YOUR BACK4APP KEYS HERE ====
-        Parse.initialize("TsgOgpJ2WZ95578IDHcZT0rKANPH2bB6KYaYJtjT", "yH9WDeL6bCvxI60ol7KswkzBE694aJrsKDLERFen"); // <<--- INSERT YOUR KEYS!!!
+        // Initialization
+        Parse.initialize("TsgOgpJ2WZ95578IDHcZT0rKANPH2bB6KYaYJtjT", "yH9WDeL6bCvxI60ol7KswkzBE694aJrsKDLERFen");
         Parse.serverURL = "https://parseapi.back4app.com";
-        // ==== END PARSE SETUP ====
         
         const API_KEY = '1070730380f5fee0d87cf0382670b255';
         const BASE_URL = 'https://api.themoviedb.org/3';
@@ -493,7 +287,7 @@
         let currentCarouselIndex = 0;
         let carouselInterval;
 
-        // DOM Elements
+        // DOM Cache
         const galleryContainer = document.getElementById('galleryContainer');
         const galleryTitle = document.getElementById('galleryTitle');
         const searchInput = document.getElementById('searchInput');
@@ -518,40 +312,28 @@
         const nowPlayingPoster = document.getElementById('nowPlayingPoster');
         
         const availableSources = [
+            { id: 'vidsrccc', name: 'vidsrc.cc (Fastest)', urls: { movie: 'https://vidsrc.cc/v2/embed/movie/{id}?autoPlay=false', tv: 'https://vidsrc.cc/v2/embed/tv/{id}/{season}/{episode}?autoPlay=false' } },
             { id: 'primewire', name: 'Primewire', urls: { movie: 'https://www.primewire.tf/embed/movie?tmdb={id}', tv: 'https://www.primewire.tf/embed/tv?tmdb={id}&season={season}&episode={episode}&server=vidmoly' } },
-            { id: 'wplayme', name: 'Wplay.me', urls: { movie: 'https://embed.wplay.me/embed/movie/{id}', tv: 'https://embed.wplay.me/embed/tv/{id}/{season}/{episode}' } },
             { id: 'flicky', name: 'Flicky', urls: { movie: 'https://flicky.host/embed/movie/?id={id}', tv: 'https://flicky.host/embed/tv/?id={id}&season={season}&episode={episode}' } },
-            { id: 'vidsrccc', name: 'vidsrc.cc', urls: { movie: 'https://vidsrc.cc/v2/embed/movie/{id}?autoPlay=false', tv: 'https://vidsrc.cc/v2/embed/tv/{id}/{season}/{episode}?autoPlay=false' } },
-
             { id: 'vidpop', name: 'Vidpop', urls: { movie: 'https://www.vidpop.xyz/embed/?tmdb={id}', tv: 'https://www.vidpop.xyz/embed/?id={id}&season={season}&episode={episode}' } },
             { id: 'rive', name: 'RiveStream', urls: { movie: 'https://rivestream.org/embed?type=movie&id={id}', tv: 'https://rivestream.org/embed?type=tv&id={id}&season={season}&episode={episode}' } },
-            { id: 'vidify', name: 'Vidify', urls: { movie: 'https://vidify.top/embed/movie/{id}', tv: 'https://vidify.top/embed/tv/{id}/{season}/{episode}' } },
-            { id: 'vidjoy', name: 'VidJoy', urls: { movie: 'https://vidjoy.pro/embed/movie/{id}', tv: 'https://vidjoy.pro/embed/tv/{id}/{season}/{episode}' } },
             { id: 'pstream', name: 'P-Stream', urls: { movie: 'https://iframe.pstream.org/embed/tmdb-movie-{id}', tv: 'https://iframe.pstream.org/embed/tmdb-tv-{id}/{season}/{episode}' } }
         ];
 
+        // LOGIC: CONTINUE WATCHING
         function getContinueWatchingKey({ sourceId, type, id, season, episode }) {
-            if (type === 'movie') return `${sourceId}:movie:${id}`;
-            if (type === 'tv') return `${sourceId}:tv:${id}:${season}:${episode}`;
-            return '';
+            return type === 'movie' ? `${sourceId}:movie:${id}` : `${sourceId}:tv:${id}:${season}:${episode}`;
         }
 
         async function saveContinueWatching(key, position) {
-            try {
-                await Parse.Cloud.run('saveContinueWatching', { key, position });
-            } catch (err) {
-                console.error('Parse saveContinueWatching failed:', err);
-            }
+            try { await Parse.Cloud.run('saveContinueWatching', { key, position }); } catch (err) {}
         }
 
         async function getContinueWatching(key) {
             try {
                 const res = await Parse.Cloud.run('getContinueWatching', { key });
                 return res && typeof res.position === "number" ? res.position : 0;
-            } catch (err) {
-                console.error('Parse getContinueWatching failed:', err);
-                return 0;
-            }
+            } catch (err) { return 0; }
         }
 
         async function deleteContinueWatching(key) {
@@ -569,23 +351,16 @@
 
         function startParseProgressTracking() {
             stopParseProgressTracking();
-
             const sourceId = sourceSelector.value;
             const type = currentType;
             const id = currentItemData.id;
             let season = 1, episode = 1;
-            if (type === 'tv') {
-                season = seasonSelect.value;
-                episode = episodeSelect.value;
-            }
+            if (type === 'tv') { season = seasonSelect.value; episode = episodeSelect.value; }
             lastVideoKey = getContinueWatchingKey({ sourceId, type, id, season, episode });
 
             getContinueWatching(lastVideoKey).then(seconds => {
                 watchSeconds = seconds;
                 lastSaved = seconds;
-                if (seconds > 0) {
-                    // No external seeking support in iframe, so just report it.
-                }
             });
 
             parseProgressTimer = setInterval(() => {
@@ -606,249 +381,170 @@
         async function loadContinueWatchingParse() {
             const CW = Parse.Object.extend('ContinueWatching');
             const query = new Parse.Query(CW);
-            query.limit(1000);
+            query.limit(10);
             query.descending('updatedAt');
-            const results = await query.find();
-            const continueWatchingData = [];
-            for (let row of results) {
-                const key = row.get('key');
-                const position = row.get('position');
-                let sourceId, type, id, season, episode;
-                let tmp = key.split(':');
-                sourceId = tmp[0];
-                type = tmp[1];
-                id = tmp[2];
-                if(type === "tv") {
-                    season = tmp[3];
-                    episode = tmp[4];
-                }
-                continueWatchingData.push({ key, sourceId, type, id, season, episode, position });
-            }
-            renderContinueWatchingParse(continueWatchingData);
+            try {
+                const results = await query.find();
+                const data = results.map(row => {
+                    const key = row.get('key');
+                    const tmp = key.split(':');
+                    return { key, sourceId: tmp[0], type: tmp[1], id: tmp[2], season: tmp[3], episode: tmp[4], position: row.get('position') };
+                });
+                renderContinueWatchingParse(data);
+            } catch (e) {}
         }
 
-        async function renderContinueWatchingParse(continueWatchingData) {
-            if (!continueWatchingData.length) {
-                continueWatchingSection.style.display = 'none';
-                return;
-            }
-            continueWatchingSection.style.display = 'block';
+        async function renderContinueWatchingParse(data) {
+            if (!data.length) { continueWatchingSection.classList.add('hidden'); return; }
+            continueWatchingSection.classList.remove('hidden');
             continueWatchingContainer.innerHTML = '';
 
-            for(const item of continueWatchingData) {
+            for(const item of data) {
                 const card = document.createElement('div');
-                card.className = 'continue-watching-card';
-                const cardId = `${item.type}:${item.id}:${item.season || ""}:${item.episode || ""}`;
-                card.dataset.cardId = cardId;
+                card.className = 'w-48 flex-shrink-0 group cursor-pointer relative fade-in';
+                const cardId = `cw-${item.type}-${item.id}`;
+                card.id = cardId;
                 card.innerHTML = `
-                    <button class="close-btn" title="Remove">&times;</button>
-                    <div class="image-container">
-                        <img src="https://via.placeholder.com/150x225/1e293b/94a3b8?text=Loading..." alt="Loading">
-                        <div class="progress-overlay">
-                            <div class="progress-bar" style="width: 100%"></div>
+                    <button class="absolute -top-2 -right-2 z-20 bg-red-600 text-white w-6 h-6 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">&times;</button>
+                    <div class="relative rounded-xl overflow-hidden aspect-[2/3] bg-slate-800">
+                        <img src="" class="cw-img w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity">
+                        <div class="absolute bottom-0 left-0 right-0 h-1 bg-slate-700">
+                            <div class="h-full bg-blue-500" style="width: 70%"></div>
                         </div>
                     </div>
-                    <div class="title-area">
-                        <div class="title">Loading...</div>
-                        <div class="progress">Last seen: ${formatTime(item.position)}</div>
+                    <div class="mt-2">
+                        <div class="cw-title text-sm font-bold truncate">Loading...</div>
+                        <div class="text-[10px] text-slate-500 uppercase font-black">${item.type === 'tv' ? `S${item.season} E${item.episode}` : 'Movie'}</div>
                     </div>
                 `;
-                
-                card.querySelector('.close-btn').addEventListener('click', async e => {
+
+                card.querySelector('button').onclick = async (e) => {
                     e.stopPropagation();
-                    if(confirm('Remove this from "Continue Watching"?')) {
-                        await deleteContinueWatching(item.key);
-                        card.remove();
-                        loadContinueWatchingParse();
-                    }
-                });
+                    await deleteContinueWatching(item.key);
+                    loadContinueWatchingParse();
+                };
 
                 continueWatchingContainer.appendChild(card);
 
                 fetchContentDetails(item.id, item.type).then(details => {
                     if (!details) return;
-                    const title     = details.title || details.name || 'Unknown';
-                    const image     = details.poster_path ? `${IMAGE_BASE_URL}${details.poster_path}` : 'https://via.placeholder.com/150x225/1e293b/94a3b8?text=No+Image';
-                    let sub = "";
-                    if(item.type==="tv" && item.season && item.episode) 
-                        sub = `S${item.season.toString().padStart(2,"0")}E${item.episode.toString().padStart(2,"0")}`;
-
-                    const fillCard = continueWatchingContainer.querySelector(`[data-card-id='${cardId}']`);
-                    if (!fillCard) return;
-                    fillCard.querySelector('img').src = image;
-                    fillCard.querySelector('img').alt = title;
-                    fillCard.querySelector('.title').innerHTML = title + (sub ? ' <span class="text-slate-400 font-normal">' + sub + '</span>' : '');
-                    
-                    fillCard.onclick = async (e) => {
-                        if(e.target.closest('.close-btn')) return;
-                        if(details) {
-                            if(item.type == "tv") {
-                                openPlayer(details, item.season, item.episode);
-                            } else {
-                                openPlayer(details);
-                            }
-                            scrollToTop();
-                        }
+                    card.querySelector('.cw-img').src = details.poster_path ? `${IMAGE_BASE_URL}${details.poster_path}` : '';
+                    card.querySelector('.cw-title').innerText = details.title || details.name;
+                    card.onclick = () => {
+                        openPlayer(details, item.season, item.episode);
+                        scrollToTop();
                     };
                 });
             }
         }
 
+        // TMDB CORE
         async function fetchContent(type, page, query = '') {
-            try {
-                let url;
-                if (query) {
-                    url = `${BASE_URL}/search/${type}?api_key=${API_KEY}&query=${encodeURIComponent(query)}&page=${page}`;
-                } else {
-                    url = `${BASE_URL}/${type}/popular?api_key=${API_KEY}&page=${page}`;
-                }
-                const response = await fetch(url);
-                const data = await response.json();
-                return data;
-            } catch (error) {
-                console.error("TMDB Fetch Error: " + error.message);
-                return null;
-            }
+            let url = query ? `${BASE_URL}/search/${type}?api_key=${API_KEY}&query=${encodeURIComponent(query)}&page=${page}` : `${BASE_URL}/${type}/popular?api_key=${API_KEY}&page=${page}`;
+            const res = await fetch(url);
+            return await res.json();
         }
         
         async function fetchContentDetails(id, type) {
-            try {
-                const url = `${BASE_URL}/${type}/${id}?api_key=${API_KEY}`;
-                const response = await fetch(url);
-                const data = await response.json();
-                
-                if (type === 'tv' && data.seasons) {
-                    const validSeasons = data.seasons.filter(s => s.season_number >= 1);
-                    const seasonPromises = validSeasons.map(async season => {
-                        const seasonUrl = `${BASE_URL}/tv/${id}/season/${season.season_number}?api_key=${API_KEY}`;
-                        const seasonRes = await fetch(seasonUrl);
-                        const seasonData = await seasonRes.json();
-                        return { ...season, episodes: seasonData.episodes || [] };
-                    });
-                    data.seasons = await Promise.all(seasonPromises);
-                }
-                return data;
-            } catch (error) {
-                console.error("TMDB Details Error: " + error.message);
-                return null;
+            const res = await fetch(`${BASE_URL}/${type}/${id}?api_key=${API_KEY}`);
+            const data = await res.json();
+            if (type === 'tv' && data.seasons) {
+                const seasonPromises = data.seasons.filter(s => s.season_number >= 1).map(async s => {
+                    const sRes = await fetch(`${BASE_URL}/tv/${id}/season/${s.season_number}?api_key=${API_KEY}`);
+                    const sData = await sRes.json();
+                    return { ...s, episodes: sData.episodes || [] };
+                });
+                data.seasons = await Promise.all(seasonPromises);
             }
+            return data;
         }
 
+        // CAROUSEL
         async function fetchCarouselData() {
-            try {
-                const movieRes = await fetch(`${BASE_URL}/movie/popular?api_key=${API_KEY}&page=1`);
-                const movieData = await movieRes.json();
-                const tvRes = await fetch(`${BASE_URL}/tv/popular?api_key=${API_KEY}&page=1`);
-                const tvData = await tvRes.json();
-                carouselItems = [...movieData.results.slice(0, 5), ...tvData.results.slice(0, 5)];
-                renderCarousel();
-            } catch (error) {
-                console.error("Carousel data fetch failed: ", error);
-            }
+            const movieRes = await fetch(`${BASE_URL}/movie/popular?api_key=${API_KEY}&page=1`);
+            const movieData = await movieRes.json();
+            carouselItems = movieData.results.slice(0, 8);
+            renderCarousel();
         }
 
         function renderCarousel() {
-            const carouselDots = carouselContainer.querySelector('.carousel-dots');
+            const dots = carouselContainer.querySelector('.carousel-dots');
             carouselContainer.innerHTML = '';
-            carouselContainer.appendChild(carouselDots);
+            carouselContainer.appendChild(dots);
             
             carouselItems.forEach((item, index) => {
                 const slide = document.createElement('div');
                 slide.className = 'carousel-slide';
                 slide.style.backgroundImage = `url(${CAROUSEL_IMAGE_URL}${item.backdrop_path})`;
-                slide.setAttribute('data-id', item.id);
-                slide.setAttribute('data-type', item.media_type || (item.first_air_date ? 'tv' : 'movie'));
                 slide.innerHTML = `
                     <div class="carousel-overlay">
-                        <h3 class="text-3xl font-bold mb-2">${item.title || item.name}</h3>
-                        <p class="text-xl text-slate-300 max-w-2xl truncate">${item.overview || ''}</p>
-                    </div>
-                    <div class="play-button-overlay">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" />
-                        </svg>
+                        <div class="max-w-3xl fade-in">
+                            <span class="inline-block px-3 py-1 bg-blue-600 rounded-lg text-xs font-black uppercase tracking-tighter mb-4">Trending Now</span>
+                            <h3 class="text-4xl md:text-6xl font-black mb-4 leading-none tracking-tighter">${item.title || item.name}</h3>
+                            <p class="text-lg text-slate-300 line-clamp-2 max-w-xl mb-8">${item.overview}</p>
+                            <div class="flex gap-4">
+                                <button class="px-8 py-4 bg-white text-black font-bold rounded-xl hover:bg-blue-500 hover:text-white transition-all transform hover:scale-105">Watch Now</button>
+                            </div>
+                        </div>
                     </div>
                 `;
-                slide.addEventListener('click', async () => {
-                    const id = slide.getAttribute('data-id');
-                    const type = slide.getAttribute('data-type');
-                    const itemData = await fetchContentDetails(id, type);
-                    if (itemData) {
-                        openPlayer(itemData);
-                        scrollToTop();
-                    }
-                });
-                carouselContainer.insertBefore(slide, carouselDots);
+                slide.onclick = async () => {
+                    const data = await fetchContentDetails(item.id, 'movie');
+                    openPlayer(data);
+                };
+                carouselContainer.insertBefore(slide, dots);
 
                 const dot = document.createElement('div');
-                dot.className = 'carousel-dot';
-                dot.addEventListener('click', () => showSlide(index));
-                carouselDots.appendChild(dot);
+                dot.className = 'w-2 h-2 rounded-full bg-white/20 cursor-pointer transition-all';
+                dot.onclick = (e) => { e.stopPropagation(); showSlide(index); };
+                dots.appendChild(dot);
             });
-            showSlide(currentCarouselIndex);
+            showSlide(0);
             startCarousel();
         }
 
         function showSlide(index) {
             const slides = document.querySelectorAll('.carousel-slide');
-            const dots = document.querySelectorAll('.carousel-dot');
-            slides.forEach(slide => slide.classList.remove('active'));
-            dots.forEach(dot => dot.classList.remove('active'));
+            const dots = document.querySelectorAll('.carousel-dots div');
+            slides.forEach(s => s.classList.remove('active'));
+            dots.forEach(d => { d.classList.remove('bg-blue-500', 'w-8'); d.classList.add('bg-white/20', 'w-2'); });
+            
             slides[index].classList.add('active');
-            dots[index].classList.add('active');
+            dots[index].classList.add('bg-blue-500', 'w-8');
+            dots[index].classList.remove('bg-white/20', 'w-2');
             currentCarouselIndex = index;
         }
 
         function startCarousel() {
             stopCarousel();
-            carouselInterval = setInterval(() => {
-                let nextIndex = (currentCarouselIndex + 1) % carouselItems.length;
-                showSlide(nextIndex);
-            }, 8000);
+            carouselInterval = setInterval(() => showSlide((currentCarouselIndex + 1) % carouselItems.length), 6000);
         }
 
-        function stopCarousel() {
-            if (carouselInterval) clearInterval(carouselInterval);
-        }
+        function stopCarousel() { clearInterval(carouselInterval); }
         
+        // GALLERY
         function renderGallery(items) {
             galleryContainer.innerHTML = '';
-            if (!items || items.length === 0) {
-                galleryContainer.innerHTML = '<p class="text-center text-slate-500 col-span-full">No results found.</p>';
-                return;
-            }
             items.forEach(item => {
-                const title = item.title || item.name;
-                const releaseDate = item.release_date || item.first_air_date;
-                const posterPath = item.poster_path;
-
-                if (posterPath) {
-                    const posterUrl = `${IMAGE_BASE_URL}${posterPath}`;
-                    const card = document.createElement('div');
-                    card.className = "gallery-card";
-                    card.setAttribute('data-id', item.id);
-                    card.setAttribute('data-type', currentType);
-                    card.innerHTML = `
-                        <img src="${posterUrl}" alt="${title}" class="w-full h-auto object-cover">
-                        <div class="p-4">
-                            <h3 class="text-lg font-semibold text-primary-light truncate">${title}</h3>
-                            <p class="text-sm text-slate-400 mt-1">${releaseDate ? releaseDate.substring(0, 4) : 'N/A'}</p>
-                        </div>
-                    `;
-                    card.addEventListener('click', async () => {
-                        const id = card.getAttribute('data-id');
-                        const type = card.getAttribute('data-type');
-                        const itemData = await fetchContentDetails(id, type);
-                        if (itemData) {
-                            openPlayer(itemData);
-                            scrollToTop();
-                        } else {
-                            console.error("Failed to fetch item details.");
-                        }
-                    });
-                    galleryContainer.appendChild(card);
-                }
+                if (!item.poster_path) return;
+                const card = document.createElement('div');
+                card.className = "gallery-card group fade-in";
+                card.innerHTML = `
+                    <div class="relative aspect-[2/3] overflow-hidden rounded-t-xl">
+                        <img src="${IMAGE_BASE_URL}${item.poster_path}" class="w-full h-full object-cover">
+                        <div class="absolute inset-0 bg-blue-600/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    </div>
+                    <div class="p-3">
+                        <h3 class="text-sm font-bold truncate group-hover:text-blue-400 transition-colors">${item.title || item.name}</h3>
+                        <p class="text-[10px] text-slate-500 mt-1 font-bold uppercase">${(item.release_date || item.first_air_date || '').substring(0,4)}</p>
+                    </div>
+                `;
+                card.onclick = async () => {
+                    const data = await fetchContentDetails(item.id, currentType);
+                    openPlayer(data);
+                    scrollToTop();
+                };
+                galleryContainer.appendChild(card);
             });
         }
 
@@ -856,211 +552,87 @@
             const data = await fetchContent(currentType, currentPage, currentQuery);
             if (data) {
                 renderGallery(data.results);
-                pageInfoSpan.textContent = `Page ${data.page} of ${data.total_pages}`;
+                pageInfoSpan.textContent = `Page ${data.page} / ${data.total_pages}`;
                 prevPageBtn.disabled = data.page <= 1;
                 nextPageBtn.disabled = data.page >= data.total_pages;
-                prevPageBtn.classList.toggle('opacity-50', data.page <= 1);
-                nextPageBtn.classList.toggle('opacity-50', data.page >= data.total_pages);
-
-                if (currentQuery) {
-                    galleryTitle.textContent = `Search Results for "${currentQuery}"`;
-                } else {
-                    galleryTitle.textContent = currentType === 'movie' ? 'Popular Movies' : 'Popular TV Shows';
-                }
+                galleryTitle.textContent = currentQuery ? `Search: ${currentQuery}` : (currentType === 'movie' ? 'Popular Movies' : 'TV Shows');
             }
         }
 
-        function switchContent(type) {
-            currentType = type;
-            currentPage = 1;
-            currentQuery = '';
-            searchInput.value = '';
-            showMoviesBtn.classList.toggle('active', type === 'movie');
-            showTvBtn.classList.toggle('active', type === 'tv');
-            updateUI();
-        }
-        
+        // PLAYER ACTIONS
         function openPlayer(itemData, initialSeason = null, initialEpisode = null) {
             currentItemData = itemData;
-            
-            // Update Now Playing Info
-            const title = currentItemData.title || currentItemData.name;
-            const poster = currentItemData.poster_path ? `${IMAGE_BASE_URL}${currentItemData.poster_path}` : 'https://via.placeholder.com/60x90/1e293b/94a3b8?text=Poster';
-            
-            nowPlayingTitle.textContent = title;
-            nowPlayingPoster.src = poster;
+            nowPlayingTitle.textContent = itemData.title || itemData.name;
+            nowPlayingPoster.src = `${IMAGE_BASE_URL}${itemData.poster_path}`;
             nowPlayingContainer.style.display = 'flex';
             selectPrompt.style.display = 'none';
-
-            // Show video player and hide carousel
             videoPlayer.classList.remove('hidden');
-            carouselContainer.classList.remove('active');
             stopCarousel();
+            carouselContainer.style.display = 'none';
 
-            if (itemData.media_type === 'tv' || itemData.first_air_date) {
+            if (itemData.seasons) {
                 currentType = 'tv';
                 episodeSelector.classList.remove('hidden');
                 populateSeasonSelect(initialSeason, initialEpisode);
             } else {
                 currentType = 'movie';
                 episodeSelector.classList.add('hidden');
-                nowPlayingSubtitle.textContent = itemData.release_date ? itemData.release_date.substring(0, 4) : '';
-                nowPlayingOverview.textContent = itemData.overview || 'No summary available.';
+                nowPlayingSubtitle.textContent = (itemData.release_date || '').substring(0, 4);
+                nowPlayingOverview.textContent = itemData.overview;
                 updatePlayer();
             }
         }
 
-        function populateSourceSelect() {
-            sourceSelector.innerHTML = availableSources.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+        function populateSeasonSelect(initialS, initialE) {
+            seasonSelect.innerHTML = currentItemData.seasons.map(s => `<option value="${s.season_number}">Season ${s.season_number}</option>`).join('');
+            if (initialS) seasonSelect.value = initialS;
+            populateEpisodeSelect(seasonSelect.value, initialE);
         }
 
-        function populateSeasonSelect(initialSeason = null, initialEpisode = null) {
-            seasonSelect.innerHTML = '';
-            if (!currentItemData || !currentItemData.seasons) {
-                return;
-            }
-            const seasons = currentItemData.seasons.filter(s => s.episode_count > 0).sort((a, b) => a.season_number - b.season_number);
-            seasons.forEach(season => {
-                const option = document.createElement('option');
-                option.value = season.season_number;
-                option.textContent = `Season ${season.season_number}`;
-                seasonSelect.appendChild(option);
-            });
-            if (initialSeason) {
-                seasonSelect.value = initialSeason;
-            } else if (seasons.length > 0) {
-                 seasonSelect.value = seasons[0].season_number;
-            }
-            
-            if (seasons.length > 0) {
-                populateEpisodeSelect(seasonSelect.value, initialEpisode);
-            } else {
-                episodeSelect.innerHTML = '';
-            }
-        }
-
-        function populateEpisodeSelect(seasonNumber, initialEpisode = null) {
-            const season = (currentItemData.seasons || []).find(s => s.season_number == seasonNumber);
-            episodeSelect.innerHTML = '';
-            if (!season || !season.episodes || season.episodes.length === 0) {
-                const option = document.createElement('option');
-                option.value = 0;
-                option.textContent = `No episodes found`;
-                episodeSelect.appendChild(option);
-                episodeSelect.disabled = true;
-                return;
-            }
-            episodeSelect.disabled = false;
-            season.episodes.forEach(episode => {
-                const option = document.createElement('option');
-                option.value = episode.episode_number;
-                option.textContent = `Episode ${episode.episode_number}: ${episode.name || 'Untitled'}`;
-                episodeSelect.appendChild(option);
-            });
-            if (initialEpisode) {
-                episodeSelect.value = initialEpisode;
-            } else {
-                episodeSelect.value = episodeSelect.options[0].value;
-            }
+        function populateEpisodeSelect(sNum, initialE) {
+            const season = currentItemData.seasons.find(s => s.season_number == sNum);
+            episodeSelect.innerHTML = season.episodes.map(e => `<option value="${e.episode_number}">Ep ${e.episode_number}: ${e.name}</option>`).join('');
+            if (initialE) episodeSelect.value = initialE;
             updatePlayer();
         }
 
         function updatePlayer() {
-            if (!currentItemData) {
-                videoPlayer.src = '';
-                return;
-            }
+            if (!currentItemData) return;
             
-            // Update the now playing card with details
             if (currentType === 'tv') {
-                const season = currentItemData.seasons.find(s => s.season_number == seasonSelect.value);
-                const episode = season.episodes.find(e => e.episode_number == episodeSelect.value);
-                if (episode) {
-                    nowPlayingSubtitle.textContent = `S${episode.season_number.toString().padStart(2, '0')}E${episode.episode_number.toString().padStart(2, '0')}: ${episode.name || 'Untitled'}`;
-                    nowPlayingOverview.textContent = episode.overview || 'No summary available.';
-                } else {
-                    nowPlayingSubtitle.textContent = '';
-                    nowPlayingOverview.textContent = 'No summary available.';
-                }
+                const s = currentItemData.seasons.find(s => s.season_number == seasonSelect.value);
+                const e = s.episodes.find(e => e.episode_number == episodeSelect.value);
+                nowPlayingSubtitle.textContent = `S${s.season_number} E${e.episode_number}: ${e.name}`;
+                nowPlayingOverview.textContent = e.overview || currentItemData.overview;
             }
             
             const activeSource = availableSources.find(s => s.id === sourceSelector.value);
-            let url;
-
-            if (currentType === 'movie') {
-                url = activeSource.urls.movie.replace('{id}', currentItemData.id);
-            } else {
-                const season = seasonSelect.value || 1;
-                const episode = episodeSelect.value || 1;
-                if (isNaN(season) || isNaN(episode) || season == 0 || episode == 0) {
-                    videoPlayer.src = '';
-                    return;
-                }
-                url = activeSource.urls.tv.replace('{id}', currentItemData.id).replace('{season}', season).replace('{episode}', episode);
-            }
+            let url = currentType === 'movie' ? activeSource.urls.movie.replace('{id}', currentItemData.id) 
+                      : activeSource.urls.tv.replace('{id}', currentItemData.id).replace('{season}', seasonSelect.value).replace('{episode}', episodeSelect.value);
+            
             videoPlayer.src = url;
             startParseProgressTracking();
         }
 
-        function scrollToTop() {
-            window.scrollTo({
-                top: 0,
-                behavior: 'smooth'
-            });
-        }
+        // EVENTS
+        searchInput.addEventListener('input', (e) => { currentQuery = e.target.value; currentPage = 1; updateUI(); });
+        showMoviesBtn.onclick = () => { currentType = 'movie'; currentPage = 1; showMoviesBtn.classList.add('active'); showTvBtn.classList.remove('active'); updateUI(); };
+        showTvBtn.onclick = () => { currentType = 'tv'; currentPage = 1; showTvBtn.classList.add('active'); showMoviesBtn.classList.remove('active'); updateUI(); };
+        prevPageBtn.onclick = () => { currentPage--; updateUI(); };
+        nextPageBtn.onclick = () => { currentPage++; updateUI(); };
+        sourceSelector.onchange = updatePlayer;
+        seasonSelect.onchange = (e) => populateEpisodeSelect(e.target.value);
+        episodeSelect.onchange = updatePlayer;
 
-        // Event listeners
-        searchInput.addEventListener('input', () => {
-            currentQuery = searchInput.value.trim();
-            currentPage = 1;
-            updateUI();
-        });
-
-        showMoviesBtn.addEventListener('click', () => switchContent('movie'));
-        showTvBtn.addEventListener('click', () => switchContent('tv'));
-
-        prevPageBtn.addEventListener('click', () => {
-            if (currentPage > 1) {
-                currentPage--;
-                updateUI();
-            }
-        });
-
-        nextPageBtn.addEventListener('click', () => {
-            currentPage++;
-            updateUI();
-        });
-        
-        sourceSelector.addEventListener('change', updatePlayer);
-
-        seasonSelect.addEventListener('change', (e) => {
-            populateEpisodeSelect(e.target.value);
-        });
-
-        episodeSelect.addEventListener('change', updatePlayer);
+        function scrollToTop() { window.scrollTo({ top: 0, behavior: 'smooth' }); }
 
         document.addEventListener('DOMContentLoaded', () => {
-            populateSourceSelect();
+            sourceSelector.innerHTML = availableSources.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
             updateUI();
             loadContinueWatchingParse();
             fetchCarouselData();
-            videoPlayer.classList.add('hidden');
-            carouselContainer.classList.add('active');
-            nowPlayingContainer.style.display = 'none';
-            selectPrompt.style.display = 'flex';
         });
-
-        function formatTime(seconds) {
-            if (!seconds) return "0:00";
-            const minutes = Math.floor(seconds / 60);
-            const remainingSeconds = Math.floor(seconds % 60);
-            const hours = Math.floor(minutes / 60);
-            const remainingMinutes = minutes % 60;
-            if (hours > 0) {
-                return `${hours}:${remainingMinutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
-            }
-            return `${remainingMinutes}:${remainingSeconds.toString().padStart(2, '0')}`;
-        }
     </script>
 </body>
 </html>
+
