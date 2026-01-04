@@ -1,5 +1,5 @@
 // ==== ENTER YOUR BACK4APP KEYS HERE ====
-Parse.initialize("qzKhHn8FQxBkEnOADBBA7hl356CtKbBqsBZTFtce", "NHKlhu3xDOyYFy6K3MU2lhPraON2Fd1eyoYY7v58");
+Parse.initialize("fAotdEAsCOF8HvJJr2qk81HywvDVV6KvlfWhFmDO", "cvttNgVwE0kOe2orzrRa54RX1NXKH09K24YhkAra");
 Parse.serverURL = "https://parseapi.back4app.com";
 // ==== END PARSE SETUP ====
 
