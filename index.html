@@ -8,274 +8,333 @@
 
     <link rel="icon" type="image/x-icon" href="https://heather2025.nekoweb.org/images/favicon.ico">
     <link href="https://fonts.cdnfonts.com/css/pecita" rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com"></script>
+
+
     <style>
-        /* Custom CSS styles */
-        .nav-button {
-            display: flex;
-            align-items: center;
-            padding: 8px 16px;
-            border-radius: 9999px;
-            font-weight: 600;
-            transition: all 0.2s;
-        }
-
-        .nav-button.active {
-            background-color: #a78bfa;
-            color: black;
-        }
-
-        .nav-button.inactive {
-            background-color: #4c1d95;
-            color: #c4b5fd;
-            border: 1px solid #c4b5fd;
-        }
-
-        .gallery-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-            gap: 20px;
-        }
-
-        .gallery-card {
-            background-color: #374151;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            transition: transform 0.2s, box-shadow 0.2s;
-            cursor: pointer;
-            position: relative;
-        }
-
-        .gallery-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.2);
-        }
-
-        .gallery-card img {
+        /* Custom CSS for the visualizer canvas */
+        .visualizer-container {
             width: 100%;
-            height: 225px;
-            object-fit: cover;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        #audio-canvas {
             display: block;
+            /* Removed background-color to make the canvas area transparent. */
+            border-radius: 0.5rem;
+            /* Rounded corners */
+        }
+    </style>
+
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Pecita&display=swap');
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(to bottom right, #0d1117, #6b46c1, #d8b4fe);
+            color: #e6edf3;
+            min-height: 100vh;
         }
 
-        .gallery-card .card-info {
-            padding: 12px;
-            text-align: center;
+        .container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 2rem;
         }
 
-        .gallery-card .card-info h3 {
-            font-size: 1rem;
-            font-weight: 600;
-            margin-bottom: 4px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .gallery-card .card-info p {
-            font-size: 0.875rem;
-            color: #ccc;
-        }
-
-        .favorite-heart {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            font-size: 1.5rem;
-            cursor: pointer;
-            z-index: 10;
-            user-select: none;
-            text-shadow: 0 0 5px rgba(0, 0, 0, 0.8);
-        }
-
-        .favorite-heart.active {
-            color: red;
-        }
-
-        .favorite-heart.inactive {
-            color: white;
-        }
-
-        .animate-pulse-banner {
-            animation: pulse-banner 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-        }
-
-        @keyframes pulse-banner {
-            0%, 100% {
-                opacity: 1;
-            }
-            50% {
-                opacity: 0.7;
-            }
-        }
-
-        /* Modal Styles */
+        /* Video Modal */
         #videoModal {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.9);
-            display: none;
-            justify-content: center;
+            background-color: rgba(0, 0, 0, 0.95);
+            z-index: 100;
+            backdrop-filter: blur(8px);
+            display: flex;
             align-items: center;
-            z-index: 1000;
-            padding: 20px;
-            overflow-y: auto;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
         }
 
         #videoModal.visible {
-            display: flex;
+            opacity: 1;
+            visibility: visible;
         }
 
-        .modal-content {
-            background-color: #1f2937;
-            padding: 20px;
+        #videoModal .modal-content {
+            background: #161b22;
             border-radius: 12px;
-            width: 100%;
-            max-width: 1200px;
+            max-width: 900px;
+            width: 95%;
+            padding: 1.5rem;
             position: relative;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            transform: scale(0.95);
+            transition: transform 0.3s ease;
+            max-height: 85vh;
+            /* Set max height for scrolling */
+            overflow-y: auto;
+            /* Enable vertical scrolling */
         }
 
-        .modal-content-heart {
-            background-color: #1f2937;
-            padding: 20px;
-            border-radius: 12px;
-            width: 90%;
-            max-width: 800px;
-            position: relative;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+        #videoModal.visible .modal-content {
+            transform: scale(1);
         }
 
-        .close-btn {
+        #videoModal .close-btn {
             position: absolute;
-            top: 10px;
-            right: 10px;
-            color: #c4b5fd;
-            font-size: 2rem;
-            font-weight: bold;
-            cursor: pointer;
+            top: 15px;
+            right: 15px;
+            background: rgba(255, 255, 255, 0.1);
             border: none;
-            background: none;
-            transition: color 0.2s;
-        }
-
-        .close-btn:hover {
             color: white;
+            font-size: 1.5rem;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            cursor: pointer;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
         }
 
+        #videoModal .close-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Video Player & Controls Layout */
         .player-wrapper {
             display: flex;
-            gap: 20px;
-            flex-wrap: wrap;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        @media (min-width: 768px) {
+            .player-wrapper {
+                flex-direction: row;
+            }
         }
 
         .player-main {
-            flex-grow: 1;
-            min-width: 300px;
+            flex: 1;
         }
 
         .player-sidebar {
-            width: 300px;
-            min-width: 250px;
+            width: 100%;
+            max-height: 400px;
+            /* Limit height for smaller screens */
+            overflow-y: auto;
+            border-radius: 8px;
+            background-color: #0d1117;
+            padding: 1rem;
         }
 
-        @media (max-width: 1024px) {
-            .player-wrapper {
-                flex-direction: column;
-            }
+        @media (min-width: 768px) {
             .player-sidebar {
-                width: 100%;
+                width: 300px;
+                max-height: none;
+                /* Remove height limit for larger screens */
             }
         }
 
-        /* Continue Watching Styles */
-        #continueWatchingContainer {
-            overflow-x: auto;
-            padding-bottom: 10px;
+        .gallery-container {
+            display: grid;
+            gap: 1.5rem;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            margin-top: 1.5rem;
+        }
+
+        .gallery-card {
+            background: #161b22;
+            border-radius: 8px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            position: relative;
+            /* ADDED: For banner positioning */
+            display: flex;
+            /* ADDED: To ensure content fills height */
+            flex-direction: column;
+            /* ADDED: To ensure content fills height */
+        }
+
+        .gallery-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .gallery-card img {
+            width: 100%;
+            height: 225px;
+            /* Aspect ratio for posters (2:3) */
+            object-fit: cover;
+        }
+
+        .card-info {
+            padding: 0.75rem;
+            flex-grow: 1;
+            /* ADDED: To ensure content fills height */
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card-info h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .card-info p {
+            font-size: 0.8rem;
+            color: #8b949e;
+        }
+
+        .button-group .active {
+            background-color: #2e8b57;
+            color: #fff;
+        }
+
+        .button-group .inactive {
+            background-color: #21262d;
+            color: #8b949e;
+        }
+
+        .button-group button {
+            transition: background-color 0.2s, color 0.2s;
         }
 
         .continue-watching-card {
-            background-color: #374151;
-            border-radius: 8px;
             display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 8px;
-            min-width: 250px;
-            max-width: 300px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            transition: transform 0.2s;
+            background: #1f242c;
+            border-radius: 8px;
+            overflow: hidden;
             cursor: pointer;
+            transition: transform 0.2s;
             position: relative;
+            margin-bottom: 0.75rem;
+            padding: 0.5rem;
         }
 
         .continue-watching-card:hover {
-            transform: scale(1.02);
-        }
-
-        .continue-watching-card .close-btn {
-            position: absolute;
-            top: 2px;
-            right: 2px;
-            font-size: 1.2rem;
-            color: #c4b5fd;
-            padding: 0;
+            transform: translateX(5px);
         }
 
         .continue-watching-card .image-container {
-            width: 50px;
-            height: 75px;
+            position: relative;
+            width: 80px;
+            height: 120px;
             flex-shrink: 0;
+            border-radius: 4px;
+            overflow: hidden;
         }
 
-        .continue-watching-card img {
+        .continue-watching-card .image-container img {
             width: 100%;
             height: 100%;
             object-fit: cover;
-            border-radius: 4px;
         }
 
         .continue-watching-card .title-area {
             flex-grow: 1;
+            padding-left: 1rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
         }
 
         .continue-watching-card .title {
             font-weight: 600;
             font-size: 0.9rem;
-            color: white;
+            margin-bottom: 0.25rem;
+            color: #c9d1d9;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
         }
 
         .continue-watching-card .progress {
-            font-size: 0.75rem;
-            color: #9ca3af;
+            font-size: 0.8rem;
+            color: #8b949e;
         }
 
-        /* New Releases Styles */
+        .continue-watching-card .close-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: rgba(0, 0, 0, 0.4);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 1rem;
+            line-height: 1;
+            text-align: center;
+            cursor: pointer;
+            opacity: 1;
+            transition: opacity 0.2s;
+        }
+
+        .nav-button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            font-weight: 600;
+            transition: background-color 0.2s;
+            cursor: pointer;
+        }
+
+        .nav-button.active {
+            background-color: #d8b4fe;
+            /* Purple-300 */
+            color: #000;
+        }
+
+        .nav-button.inactive {
+            background-color: #21262d;
+            color: #8b949e;
+        }
+
+        /* NEW RELEASE CARD STYLES */
         .new-release-card {
-            background-color: #374151;
+            display: flex;
+            flex-direction: column;
+            width: 120px;
+            /* Boxy avatar size */
+            height: 160px;
+            /* Boxy avatar size */
+            background: #161b22;
             border-radius: 8px;
             overflow: hidden;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            min-width: 120px;
-            max-width: 120px;
-            flex-shrink: 0;
             cursor: pointer;
-            transition: transform 0.2s;
+            transition: transform 0.2s, box-shadow 0.2s;
+            position: relative;
+            flex-shrink: 0;
+            /* Prevent items from shrinking */
         }
 
         .new-release-card:hover {
-            transform: translateY(-3px);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
         }
 
         .new-release-card .image-container {
             width: 100%;
-            height: 180px;
+            height: 70%;
+            overflow: hidden;
+            border-radius: 8px 8px 0 0;
         }
 
         .new-release-card img {
@@ -285,109 +344,243 @@
         }
 
         .new-release-card .card-info {
-            padding: 8px;
+            padding: 0.5rem;
             text-align: center;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
         }
 
-        .new-release-card .card-info h3 {
-            font-size: 0.8rem;
-            font-weight: 600;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+        /* ADDED ANIMATION AND BANNER STYLES */
+        @keyframes pulse-banner {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+
+            50% {
+                transform: scale(1.08);
+                opacity: 0.8;
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
         }
 
-        .new-release-card .card-info p {
-            font-size: 0.7rem;
-            color: #ccc;
+        .animate-pulse-banner {
+            animation: pulse-banner 2s infinite ease-in-out;
         }
 
-        /* Heart Video Modal Styles */
+        /* Floating Heart Styles */
         #floatingHeart {
             position: fixed;
-            bottom: 6px;
-            left: 6px;
-            font-size: 2.5rem;
+            bottom: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 90;
             cursor: pointer;
-            z-index: 50;
-            transition: transform 0.3s;
-            animation: pulse-heart 1.5s infinite;
+            width: 200px;
+            height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 150px;
+            animation: floatAnimation 8s infinite alternate ease-in-out;
+            text-shadow: 0 0 10px rgba(255, 105, 180, 0.7);
         }
 
-        #floatingHeart:hover {
-            transform: scale(1.1);
-        }
-
-        @keyframes pulse-heart {
+        @keyframes floatAnimation {
             0% {
-                transform: scale(0.95);
+                left: 5%;
             }
-            70% {
-                transform: scale(1.05);
-            }
+
             100% {
-                transform: scale(0.95);
+                left: 80%;
             }
         }
 
+        /* New Heart Video Modal Styles */
         #heartVideoModal {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.95);
+            background-color: rgba(0, 0, 0, 0.9);
+            z-index: 101;
+            /* Higher than main video modal */
             display: none;
-            justify-content: center;
             align-items: center;
-            z-index: 1001;
+            justify-content: center;
+            backdrop-filter: blur(5px);
         }
 
         #heartVideoModal .modal-content-heart {
-            background-color: black;
-            padding: 0;
-            border: 3px solid #a78bfa;
-            max-width: 90%;
-            max-height: 90%;
-            display: flex;
-            flex-direction: column;
+            background: #1f242c;
+            border-radius: 16px;
+            padding: 1rem;
+            max-width: 95vw;
+            width: 700px;
+            max-height: 90vh;
+            position: relative;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        #heartVideoModal .close-btn-heart {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            font-size: 1.2rem;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            z-index: 10;
+            transition: background 0.2s;
         }
 
         #heartVideoModal video {
             width: 100%;
             height: auto;
-            max-height: calc(100vh - 40px);
+            max-height: 80vh;
+            display: block;
+            border-radius: 12px;
         }
 
-        .close-btn-heart {
+        /* Mobile-specific styles for better layout */
+        @media (max-width: 767px) {
+            .container {
+                padding: 1rem;
+            }
+
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+
+            .header .flex-col {
+                width: 100%;
+            }
+
+            .header .flex-row {
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 0.5rem;
+            }
+
+            #searchInput {
+                width: 100%;
+            }
+
+            .nav-button {
+                flex: 1;
+                padding: 0.5rem;
+                font-size: 0.9rem;
+            }
+
+            .nav-button svg {
+                display: none;
+            }
+
+            .new-release-card {
+                width: 100px;
+                height: 140px;
+            }
+
+            .new-release-card .card-info h3 {
+                font-size: 0.7rem;
+            }
+
+            .new-release-card .card-info p {
+                font-size: 0.6rem;
+            }
+
+            .gallery-container {
+                grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+                gap: 1rem;
+            }
+
+            .gallery-card img {
+                height: 150px;
+            }
+
+            .gallery-card h3 {
+                font-size: 0.8rem;
+            }
+
+            .gallery-card p {
+                font-size: 0.7rem;
+            }
+        }
+
+        /* Fullscreen specific styles */
+        #iframeContainer:-webkit-full-screen {
+            width: 100% !important;
+            height: 100% !important;
+            padding-bottom: 0 !important;
+        }
+
+        #iframeContainer:-moz-full-screen {
+            width: 100% !important;
+            height: 100% !important;
+            padding-bottom: 0 !important;
+        }
+
+        #iframeContainer:fullscreen {
+            width: 100% !important;
+            height: 100% !important;
+            padding-bottom: 0 !important;
+        }
+
+        /* FAVORITES STYLES */
+        .favorite-heart {
             position: absolute;
-            top: -15px;
-            right: -15px;
-            background-color: #a78bfa;
-            color: black;
-            border-radius: 50%;
-            font-size: 1.5rem;
-            width: 30px;
-            height: 30px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
+            top: 5px;
+            right: 5px;
             z-index: 10;
+            font-size: 1.5rem;
+            cursor: pointer;
+            text-shadow: 0 0 5px black;
         }
 
-        /* Visualizer styles */
-        .visualizer-container {
-            /* Keep existing styles */
+        .favorite-heart.active {
+            color: #ff69b4;
+            /* Hot Pink */
+        }
+
+        .favorite-heart.inactive {
+            color: #a0a0a0;
+            /* Gray */
+        }
+
+        /* WATCHED BANNER STYLES */
+        .watched-banner {
+            position: absolute;
+            top: 0;
+            right: 0;
+            background: #2e8b57;
+            /* Sea Green */
+            color: white;
+            font-size: 0.65rem;
+            font-weight: 700;
+            padding: 4px 8px;
+            border-bottom-left-radius: 8px;
+            z-index: 5;
+            box-shadow: -2px 2px 5px rgba(0,0,0,0.3);
+            pointer-events: none;
         }
     </style>
-    <link rel="stylesheet" href="index.css" />
-    <script src="https://cdn.tailwindcss.com"></script>
-
-
 </head>
 
 <body class="bg-gradient-to-br from-black via-purple-500 to-purple-200 text-gray-100">
+    <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
             theme: {
@@ -407,24 +600,7 @@
             },
         }
     </script>
-    <script>
-        // Placeholder for sources.js content
-        const availableSources = [
-            { id: 'videasy', name: 'Videasy', urls: { movie: 'https://videasystream.com/e/?video={id}&server=1', tv: 'https://videasystream.com/e/?video={id}&tv=1&season={season}&episode={episode}&server=1' } },
-            { id: 'vidfast', name: 'Vidfast', urls: { movie: 'https://vidfast.net/embed/movie/{id}', tv: 'https://vidfast.net/embed/tv/{id}/{season}-{episode}' } },
-            { id: 'vidsrcvip', name: 'Vidsrcvip', urls: { movie: 'https://vidsrc.vip/movie/{id}', tv: 'https://vidsrc.vip/tv/{id}/{season}-{episode}' } },
-            { id: 'wplayme', name: 'Wplayme', urls: { movie: 'https://wplayme.net/movie/{id}', tv: 'https://wplayme.net/tv/{id}/{season}/{episode}' } },
-            { id: 'vidzee', name: 'Vidzee', urls: { movie: 'https://vidzee.to/embed/movie?tmdb={id}', tv: 'https://vidzee.to/embed/tv?tmdb={id}&s={season}&e={episode}' } },
-            { id: 'vidsrcpk', name: 'Vidsrcpk', urls: { movie: 'https://vidsrc.xyz/embed/movie?tmdb={id}', tv: 'https://vidsrc.xyz/embed/tv?tmdb={id}&s={season}&e={episode}' } },
-            { id: 'primewire', name: 'Primewire', urls: { movie: 'https://primewire.sz/movie/{id}', tv: 'https://primewire.sz/tv/{id}/{season}/{episode}' } },
-            { id: 'vidpop', name: 'Vidpop', urls: { movie: 'https://vidpop.net/embed-movie/{id}', tv: 'https://vidpop.net/embed-tv/{id}-{season}-{episode}' } },
-            { id: 'rive', name: 'Rive', urls: { movie: 'https://rive.su/e/{id}', tv: 'https://rive.su/e/{id}/{season}/{episode}' } },
-            { id: 'vidify', name: 'Vidify', urls: { movie: 'https://vidify.net/movie/{id}', tv: 'https://vidify.net/tv/{id}-{season}-{episode}' } },
-            { id: 'vidsrccx', name: 'Vidsrccx', urls: { movie: 'https://vidsrc.cx/embed/movie/{id}', tv: 'https://vidsrc.cx/embed/tv/{id}/{season}/{episode}' } },
-        ];
-        const sandboxedSources = ['wplayme', 'vidzee', 'vidsrcpk', 'primewire', 'vidpop', 'rive', 'vidify', 'vidsrccx', ];
-        const noSandboxSources = ['videasy', 'vidfast', 'vidsrcvip'];
-    </script>
+
     <audio id="myAudio" src="/images/holla1.mp3" preload="auto" crossorigin="anonymous">
         Your browser does not support the audio element.
     </audio>
@@ -447,7 +623,7 @@
             <div class="flex flex-col md:flex-row items-center gap-4 w-full md:w-auto">
                 <div class="relative w-full md:w-auto">
                     <input type="text" id="searchInput" placeholder="Search for movies or TV shows..."
-                        class="w-full md:w-80 p-3 pl-10 bg-gray-800 rounded-full textwhite focus:outline-none focus:ring-2 focus:ring-purple-300 transition-all duration-300" />
+                        class="w-full md:w-80 p-3 pl-10 bg-gray-800 rounded-full text-white focus:outline-none focus:ring-2 focus:ring-purple-300 transition-all duration-300" />
                     <svg class="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" fill="currentColor"
                         viewBox="0 0 20 20">
                         <path fill-rule="evenodd"
@@ -480,7 +656,8 @@
 
 
 
-        <div class="w-full max-w-48 p-3 bg-transparent dark:bg-transparent rounded-xl shadow-2xl transition-all duration-300 md:ml-4">
+        <div
+            class="w-full max-w-48 p-3 bg-transparent dark:bg-transparent rounded-xl shadow-2xl transition-all duration-300 md:ml-4">
 
             <h1 class="text-base font-bold text-white mb-2 text-center">
                 Can I Get A Holla?!
@@ -589,7 +766,7 @@
                         class="p-2 bg-gray-700 rounded-full text-white hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                             <path fill-rule="evenodd"
-                                d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                                d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
                                 clip-rule="evenodd" />
                         </svg>
                     </button>
@@ -613,8 +790,7 @@
             <h2 id="modalTitle" class="text-xl md:text-2xl font-bold mb-4"></h2>
             <div class="player-wrapper">
                 <div class="player-main">
-                    <div id="iframeContainer"
-                        class="relative w-full h-0 pb-[56.25%] rounded-lg overflow-hidden bg-black">
+                    <div id="iframeContainer" class="relative w-full h-0 pb-[56.25%] rounded-lg overflow-hidden bg-black">
                     </div>
                     <div class="p-4 bg-gray-800 rounded-lg mt-4">
                         <h3 id="nowPlaying" class="text-lg font-semibold text-white"></h3>
@@ -637,14 +813,14 @@
                                 </button>
                             </div>
                             <button id="fullscreenBtn"
-                                class="mt-2 py-2 px-4 bg-purple-600 rounded-lg textwhite hover:bg-purple-700 transition duration-200 font-bold">
+                                class="mt-2 py-2 px-4 bg-purple-600 rounded-lg text-white hover:bg-purple-700 transition duration-200 font-bold">
                                 FULLSCREEN
                             </button>
                         </div>
 
                         <div class="flex gap-2">
                             <button id="showNoSandboxBtn"
-                                class="flex-1 py-2 px-4 rounded-lg font-semibold transition-colors duration-200 active ring-2 ring-purple-300">
+                                class="flex-1 py-2 px-4 rounded-lg font-semibold transition-colors duration-200 ring-2 ring-purple-300">
                                 Sources w/o Ads
                             </button>
                             <button id="showSandboxBtn"
@@ -707,13 +883,13 @@
         aria-labelledby="favoritesModalTitle">
         <div class="absolute inset-0 bg-black/60" id="favoritesOverlay"></div>
         <div
-            class="relative mx-auto my-10 w-[92%] max-w-6xl rounded-2xl border border-gray-700 bg-gray-900 overflow-hidden">
-            <div class="flex items-center justify-between px-4 py-3 border-b border-gray-700">
+            class="relative mx-auto my-10 w-[92%] max-w-6xl rounded-2xl border border-gray-700 bg-gray-900 overflow-y-auto max-h-[90vh]">
+            <div class="flex items-center justify-between px-4 py-3 border-b border-gray-700 sticky top-0 bg-gray-900 z-10">
                 <h3 id="favoritesModalTitle" class="text-xl font-semibold">My Favorites</h3>
                 <button id="closeFavoritesBtn" aria-label="Close"
                     class="h-9 w-9 grid place-items-center rounded-lg border border-gray-600 hover:bg-gray-800">✕</button>
             </div>
-            <div class="p-4 overflow-y-auto max-h-[80vh]">
+            <div class="p-4">
                 <div id="favoritesGrid" class="gallery-container">
                     <p id="noFavoritesMessage" class="text-center text-gray-500 col-span-full hidden">You haven't added
                         any favorites yet.</p>
@@ -725,7 +901,7 @@
     <script type="text/javascript" src="https://unpkg.com/parse@4.0.0/dist/parse.min.js"></script>
     <script>
         // ==== ENTER YOUR BACK4APP KEYS HERE ====
-        Parse.initialize("moMN4T5coicc30uD2JaZJqObTfybQRqnrzTUkGem", "r0Xs5pM7lDlNOZKfjQtyCbqaGlxtnOg15G0Xp4ju");
+        Parse.initialize("fAotdEAsCOF8HvJJr2qk81HywvDVV6KvlfWhFmDO", "cvttNgVwE0kOe2orzrRa54RX1NXKH09K24YhkAra");
         Parse.serverURL = "https://parseapi.back4app.com";
         // ==== END PARSE SETUP ====
 
@@ -737,7 +913,7 @@
         let currentType = 'movie';
         let currentQuery = '';
         let currentItemData = null;
-        let isSandboxMode = true; // Default to No Sandbox mode
+        let isSandboxMode = true; // Default to sandbox mode (Sources w/o Ads)
 
         let currentReleaseDate = new Date();
         let newReleaseType = 'movie';
@@ -809,12 +985,28 @@
         const noFavoritesMessage = document.getElementById('noFavoritesMessage');
         let favoritedItems = {}; // { 'tmdb-id-type': Parse.Object }
 
+        // RECENTLY WATCHED CACHE
+        let recentlyWatchedItems = {}; // { 'tmdbId-type': { season, episode, date } }
 
-        // CONTINUE WATCHING NEW/MODIFIED VARIABLES
-        let lastVideoKey = null;
-        let currentWatchPosition = 0; // Represents the time (in seconds) to save. Hardcoded to 1 for simplified example.
-        let isPlayerOpen = false; // Flag to track player state
-        let lastUsedSource = null; // Stores the source ID for the last watched video
+        const availableSources = [
+            { id: 'wplayme', name: 'Mike Ty-thhon', urls: { movie: 'https://embed.wplay.me/embed/movie/{id}', tv: 'https://embed.wplay.me/embed/tv/{id}/{season}/{episode}' } },
+            { id: 'vidzee', name: 'VidZee', urls: { movie: 'https://player.vidzee.wtf/embed/movie/{id}', tv: 'https://player.vidzee.wtf/embed/tv/{id}/{season}/{episode}' } },
+            { id: 'vidsrcpk', name: 'VidSrcPk', urls: { movie: 'https://vidsrc.win/movie/?id={id}', tv: 'https://vidsrc.win/tv.html?id={id}&season={season}&episode={episode}' } },
+            { id: 'primewire', name: 'Primewire', urls: { movie: 'https://www.primewire.tf/embed/movie?tmdb={id}', tv: 'https://www.primewire.tf/embed/tv?tmdb={id}&season={season}&episode={episode}&server=vidmoly' } },
+            { id: 'vidpop', name: 'Vidpop', urls: { movie: 'https://www.vidpop.xyz/embed/?id={id}', tv: 'https://www.vidpop.xyz/embed/tv/?id={id}&season={season}&episode={episode}' } },
+            { id: 'rive', name: 'RiveStream', urls: { movie: 'https://rivestream.org/embed?type=movie&id={id}', tv: 'https://rivestream.org/embed?type=tv&id=tmdb&id={id}&season={season}&episode={episode}' } },
+            { id: 'vidify', name: 'Vidify', urls: { movie: 'https://vidify.top/embed/movie/{id}', tv: 'https://vidify.top/embed/tv/{id}/{season}/{episode}' } },
+            { id: 'vidsrccx', name: 'VidSrcCX', urls: { movie: 'https://vidsrc.cx/embed/movie/{id}', tv: 'https://vidsrc.cx/embed/tv/{id}/{season}/{episode}' } },
+
+
+            { id: 'videasy', name: 'VidEasy', urls: { movie: 'https://player.videasy.net/movie/{id}?color=8834ec', tv: 'https://player.videasy.net/tv/{id}/{season}/{episode}?nextEpisode=true&color=8834ec' } },
+            { id: 'vidfast', name: 'VidFast', urls: { movie: 'https://vidfast.pro/movie/{id}', tv: 'https://vidfast.pro/tv/{id}/{season}/{episode}' } },
+            { id: 'vidsrcvip', name: 'vidsrc.vip', urls: { movie: 'https://vidsrc.vip/embed/movie/{id}', tv: 'https://vidsrc.vip/embed/tv/{id}/{season}/{episode}' } }
+        ];
+        // NOTE: The user's original setup defined sandboxedSources as the ones they wanted *with* the sandbox attribute, which typically works *better* for sources with a lot of popups/ads.
+        // We will keep the default `isSandboxMode = true` which uses `sandboxedSources` and applies the sandbox attribute, as per the original intent.
+        const sandboxedSources = ['wplayme', 'vidzee', 'vidsrcpk', 'primewire', 'vidpop', 'rive', 'vidify', 'vidsrccx', ];
+        const noSandboxSources = ['videasy', 'vidfast', 'vidsrcvip'];
 
         /* --- FAVORITES LOGIC --- */
         async function loadFavorites() {
@@ -828,9 +1020,6 @@
                     map[key] = item;
                     return map;
                 }, {});
-
-                // Re-render gallery to update heart icons
-                updateUI();
             } catch (err) {
                 console.error("Failed to load favorites from Parse:", err);
                 favoritedItems = {};
@@ -909,9 +1098,9 @@
                     </div>
                 `;
 
-                // FIX: Attach click listener to the heart span and stop propagation
+                // FIX: Added e.stopPropagation() to prevent the card click handler from firing
                 card.querySelector('.favorite-heart').addEventListener('click', async (e) => {
-                    e.stopPropagation(); // Prevent card click event
+                    e.stopPropagation();
                     const id = e.target.getAttribute('data-id');
                     const type = e.target.getAttribute('data-type');
                     const poster = e.target.getAttribute('data-poster');
@@ -919,7 +1108,6 @@
                     await toggleFavorite(parseInt(id), type, poster, title);
                 });
 
-                // Attach click listener to the card for opening player
                 card.addEventListener('click', async () => {
                     const itemData = await fetchContentDetails(tmdbId, type);
                     if (itemData) {
@@ -945,17 +1133,77 @@
             favoritesModal.classList.remove('flex');
         }
 
-        /* --- CONTINUE WATCHING LOGIC (REVISED FOR OPTIMIZATION) --- */
+        /* --- RECENTLY WATCHED LOGIC --- */
+        async function loadRecentlyWatched() {
+            try {
+                const Recent = Parse.Object.extend('RecentlyWatched');
+                const query = new Parse.Query(Recent);
+                query.limit(1000);
+                query.descending('updatedAt');
+                const results = await query.find();
+                recentlyWatchedItems = results.reduce((map, item) => {
+                    const key = `${item.get('tmdbId')}-${item.get('type')}`;
+                    map[key] = {
+                        season: item.get('season'),
+                        episode: item.get('episode'),
+                        date: item.updatedAt
+                    };
+                    return map;
+                }, {});
+            } catch (err) {
+                console.error("Failed to load Recently Watched from Parse:", err);
+                recentlyWatchedItems = {};
+            }
+        }
 
-        function getContinueWatchingKey({ type, id, season, episode }) {
-            // New optimized key: No source ID
-            if (type === 'movie') return `movie:${id}`;
-            if (type === 'tv') return `tv:${id}:${season}:${episode}`;
+        async function saveRecentlyWatched() {
+            if (!currentItemData) return;
+            const tmdbId = currentItemData.id;
+            const type = currentType;
+            let season = null;
+            let episode = null;
+
+            if (type === 'tv') {
+                season = parseInt(seasonSelect.value);
+                episode = parseInt(episodeSelect.value);
+            }
+
+            try {
+                const Recent = Parse.Object.extend('RecentlyWatched');
+                const query = new Parse.Query(Recent);
+                query.equalTo('tmdbId', tmdbId);
+                query.equalTo('type', type);
+                let record = await query.first();
+                if (!record) {
+                    record = new Recent();
+                    record.set('tmdbId', tmdbId);
+                    record.set('type', type);
+                }
+                record.set('season', season);
+                record.set('episode', episode);
+                await record.save();
+                
+                // Update local cache
+                recentlyWatchedItems[`${tmdbId}-${type}`] = {
+                    season,
+                    episode,
+                    date: new Date()
+                };
+                updateUI();
+            } catch (err) {
+                console.error('Parse saveRecentlyWatched failed:', err);
+            }
+        }
+
+        /* --- CONTINUE WATCHING LOGIC --- */
+
+        function getContinueWatchingKey({ sourceId, type, id, season, episode }) {
+            if (type === 'movie') return `${sourceId}:movie:${id}`;
+            if (type === 'tv') return `${sourceId}:tv:${id}:${season}:${episode}`;
             return '';
         }
 
-        // Simplified function to save progress on modal close
-        async function saveContinueWatching(key, position, lastSourceId) {
+        async function saveContinueWatching(key, position) {
             try {
                 const CW = Parse.Object.extend('ContinueWatching');
                 const query = new Parse.Query(CW);
@@ -965,30 +1213,11 @@
                     record = new CW();
                     record.set('key', key);
                 }
-                // Always save position as 1 (or the last recorded position)
                 record.set('position', position);
-                // Save the last used source ID
-                record.set('lastSourceId', lastSourceId); 
                 await record.save();
             } catch (err) {
                 console.error('Parse saveContinueWatching failed:', err);
             }
-        }
-
-        // Function to be called on modal close
-        async function saveCurrentProgressOnClose() {
-            if (lastVideoKey && isPlayerOpen && lastUsedSource) {
-                // In a real app, 'currentWatchPosition' would be updated from the iframe's video time.
-                // For this example, we save '1' to just mark it as "started" / "continue watching."
-                const positionToSave = currentWatchPosition > 0 ? currentWatchPosition : 1;
-                
-                await saveContinueWatching(lastVideoKey, positionToSave, lastUsedSource);
-                loadContinueWatchingParse(); // Reload list to show the new item
-            }
-            lastVideoKey = null;
-            currentWatchPosition = 0;
-            isPlayerOpen = false;
-            lastUsedSource = null;
         }
 
         async function getContinueWatching(key) {
@@ -997,10 +1226,10 @@
                 const query = new Parse.Query(CW);
                 query.equalTo('key', key);
                 const obj = await query.first();
-                return obj ? { position: obj.get("position"), lastSourceId: obj.get("lastSourceId") } : { position: 0, lastSourceId: null };
+                return obj && typeof obj.get("position") === "number" ? obj.get("position") : 0;
             } catch (err) {
                 console.error('Parse getContinueWatching failed:', err);
-                return { position: 0, lastSourceId: null };
+                return 0;
             }
         }
 
@@ -1018,9 +1247,17 @@
             }
         }
 
+        let parseProgressTimer = null;
+        let lastVideoKey = null;
+        let watchSeconds = 0;
+        let lastSaved = 0;
+        let hasSavedRecent = false;
+
         function startParseProgressTracking() {
-            // Setup the key only, no continuous tracking interval
-            lastUsedSource = sourceSelector.value;
+            stopParseProgressTracking();
+            hasSavedRecent = false;
+
+            const sourceId = sourceSelector.value;
             const type = currentType;
             const id = currentItemData.id;
             let season = 1,
@@ -1029,24 +1266,39 @@
                 season = seasonSelect.value;
                 episode = episodeSelect.value;
             }
-            // Use the OPTIMIZED key structure
             lastVideoKey = getContinueWatchingKey({
+                sourceId,
                 type,
                 id,
                 season,
                 episode
             });
-            isPlayerOpen = true;
 
-            // Optional: Fetch previous position to set currentWatchPosition if desired for the UI
-            getContinueWatching(lastVideoKey).then(data => {
-                currentWatchPosition = data.position;
-                // Note: We don't pre-select the source here, we do it in openPlayer if coming from CW.
+            getContinueWatching(lastVideoKey).then(seconds => {
+                watchSeconds = seconds;
+                lastSaved = seconds;
             });
+
+            parseProgressTimer = setInterval(() => {
+                watchSeconds += 10; // Check every 10s for speed
+                
+                // SAVE RECENT WATCHED AFTER 30 SECONDS
+                if (!hasSavedRecent && watchSeconds >= 30) {
+                    saveRecentlyWatched();
+                    hasSavedRecent = true;
+                }
+
+                if (Math.abs(watchSeconds - lastSaved) >= 20) {
+                    saveContinueWatching(lastVideoKey, watchSeconds);
+                    lastSaved = watchSeconds;
+                    loadContinueWatchingParse();
+                }
+            }, 10000);
         }
 
         function stopParseProgressTracking() {
-            // Nothing to stop since there's no interval
+            if (parseProgressTimer) clearInterval(parseProgressTimer);
+            parseProgressTimer = null;
         }
 
         async function loadContinueWatchingParse() {
@@ -1060,19 +1312,18 @@
                     const key = row.get('key');
                     const position = row.get('position');
                     const updatedAt = row.updatedAt;
-                    const lastSourceId = row.get('lastSourceId'); // NEW FIELD
-                    
-                    let type, id, season, episode;
+                    let sourceId, type, id, season, episode;
                     let tmp = key.split(':');
-                    type = tmp[0];
-                    id = tmp[1];
+                    sourceId = tmp[0];
+                    type = tmp[1];
+                    id = tmp[2];
                     if (type === "tv") {
-                        season = tmp[2];
-                        episode = tmp[3];
+                        season = tmp[3];
+                        episode = tmp[4];
                     }
                     continueWatchingData.push({
                         key,
-                        lastSourceId, // Store source ID
+                        sourceId,
                         type,
                         id,
                         season,
@@ -1081,7 +1332,6 @@
                         updatedAt
                     });
                 }
-                // No need for uniqueDataMap since the key is now unique by content/episode
                 renderContinueWatchingParse(continueWatchingData);
             } catch (err) {
                 console.error("Failed to load continue watching from Parse:", err);
@@ -1093,10 +1343,16 @@
             const continueWatchingContainer = document.getElementById('continueWatchingContainer');
             const continueWatchingSection = document.getElementById('continueWatchingSection');
 
-            // Sort by updatedAt, newest first
-            continueWatchingData.sort((a, b) => b.updatedAt - a.updatedAt);
+            const uniqueDataMap = new Map();
+            continueWatchingData.forEach(item => {
+                const cardId = `${item.type}:${item.id}:${item.season || ""}:${item.episode || ""}`;
+                if (!uniqueDataMap.has(cardId) || new Date(item.updatedAt) > new Date(uniqueDataMap.get(cardId).updatedAt)) {
+                    uniqueDataMap.set(cardId, item);
+                }
+            });
+            const uniqueContinueWatchingData = Array.from(uniqueDataMap.values()).sort((a, b) => b.updatedAt - a.updatedAt);
 
-            if (!continueWatchingData.length) {
+            if (!uniqueContinueWatchingData.length) {
                 continueWatchingSection.style.display = 'none';
                 return;
             }
@@ -1104,8 +1360,8 @@
 
             continueWatchingContainer.innerHTML = '';
 
-            for (const item of continueWatchingData) {
-                const cardId = item.key; // Use the optimized key as card ID
+            for (const item of uniqueContinueWatchingData) {
+                const cardId = `${item.type}:${item.id}:${item.season || ""}:${item.episode || ""}`;
 
                 const card = document.createElement('div');
                 card.className = 'continue-watching-card';
@@ -1148,11 +1404,9 @@
                         if (e.target.closest('.close-btn')) return;
                         if (details) {
                             if (item.type === "tv") {
-                                // Pass the stored source ID to openPlayer
-                                openPlayer(details, item.season, item.episode, item.lastSourceId); 
+                                openPlayer(details, item.season, item.episode);
                             } else {
-                                // Pass the stored source ID to openPlayer
-                                openPlayer(details, null, null, item.lastSourceId); 
+                                openPlayer(details);
                             }
                         }
                     };
@@ -1271,6 +1525,18 @@
                     const heartClass = isFavorited ? 'active' : 'inactive';
                     const heartIcon = isFavorited ? '❤' : '♡';
 
+                    // WATCHED BANNER LOGIC
+                    let watchedBannerHTML = '';
+                    const recentData = recentlyWatchedItems[`${tmdbId}-${type}`];
+                    if (recentData) {
+                        const dateStr = new Date(recentData.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                        if (type === 'movie') {
+                            watchedBannerHTML = `<div class="watched-banner">Watched ${dateStr}</div>`;
+                        } else {
+                            watchedBannerHTML = `<div class="watched-banner">S${recentData.season}E${recentData.episode} (${dateStr})</div>`;
+                        }
+                    }
+
                     let bannerHTML = '';
                     if (isNewRelease) {
                         const bannerText = currentType === 'movie' ? 'NEW RELEASE' : 'NEW EPISODE';
@@ -1279,6 +1545,7 @@
 
                     card.innerHTML = `
                         ${bannerHTML}
+                        ${watchedBannerHTML}
                         <span class="favorite-heart ${heartClass}" data-id="${tmdbId}" data-type="${type}" data-title="${title}" data-poster="${posterUrl}">
                             ${heartIcon}
                         </span>
@@ -1289,17 +1556,12 @@
                         </div>
                     `;
 
-                    // FIX: Attach click listener to the heart span and stop propagation
+                    // FIX: Added e.stopPropagation() to prevent the card click handler from firing
                     card.querySelector('.favorite-heart').addEventListener('click', async (e) => {
-                        e.stopPropagation(); // Prevent card click event
-                        const id = e.target.getAttribute('data-id');
-                        const type = e.target.getAttribute('data-type');
-                        const poster = e.target.getAttribute('data-poster');
-                        const title = e.target.getAttribute('data-title');
-                        await toggleFavorite(parseInt(id), type, poster, title);
+                        e.stopPropagation();
+                        await toggleFavorite(tmdbId, type, posterUrl, title);
                     });
 
-                    // Attach click listener to the card for opening player
                     card.addEventListener('click', async () => {
                         const itemData = await fetchContentDetails(tmdbId, type);
                         if (itemData) {
@@ -1407,14 +1669,13 @@
 
         /* --- PLAYER/MODAL LOGIC --- */
         function closeModal() {
-            saveCurrentProgressOnClose(); // Save progress before closing
             videoModal.classList.remove('visible');
             videoModal.classList.add('hidden');
-            stopParseProgressTracking(); // Not strictly needed, but kept for clarity
+            stopParseProgressTracking();
             if (videoPlayer) videoPlayer.src = '';
         }
 
-        function openPlayer(itemData, initialSeason = null, initialEpisode = null, initialSourceId = null) {
+        function openPlayer(itemData, initialSeason = null, initialEpisode = null) {
             currentItemData = itemData;
             modalTitle.textContent = currentItemData.title || currentItemData.name;
             stopParseProgressTracking();
@@ -1425,35 +1686,34 @@
 
             if (isTV) {
                 currentType = 'tv';
-                populateSeasonSelect(initialSeason, initialEpisode, initialSourceId);
+                populateSeasonSelect(initialSeason, initialEpisode);
             } else {
                 currentType = 'movie';
-                populateSourceSelector(initialSourceId);
+                updatePlayer();
             }
 
             videoModal.classList.remove('hidden');
             videoModal.classList.add('visible');
+            
+            // FIX: Ensure sandbox UI is correctly initialized when opening player
+            if (isSandboxMode) {
+                showNoSandboxBtn.classList.add('active', 'ring-2', 'ring-purple-300');
+                showSandboxBtn.classList.remove('active', 'ring-2', 'ring-purple-300', 'inactive');
+            } else {
+                showSandboxBtn.classList.add('active', 'ring-2', 'ring-purple-300');
+                showNoSandboxBtn.classList.remove('active', 'ring-2', 'ring-purple-300', 'inactive');
+            }
         }
 
-        function populateSourceSelector(initialSourceId = null) {
+        function populateSourceSelector() {
             sourceSelector.innerHTML = '';
-            // NOTE: availableSources, sandboxedSources, and noSandboxSources are now in sources.js
             const sourcesToShow = isSandboxMode ? sandboxedSources : noSandboxSources;
             const filteredSources = availableSources.filter(s => sourcesToShow.includes(s.id));
             sourceSelector.innerHTML = filteredSources.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
-            
-            // Set initial source if provided (e.g., from Continue Watching)
-            if (initialSourceId && filteredSources.some(s => s.id === initialSourceId)) {
-                sourceSelector.value = initialSourceId;
-            } else if (filteredSources.length > 0) {
-                 // Default to the first source if no initial source is provided or valid
-                sourceSelector.value = filteredSources[0].id;
-            }
-
             updatePlayer();
         }
 
-        function populateSeasonSelect(initialSeason = null, initialEpisode = null, initialSourceId = null) {
+        function populateSeasonSelect(initialSeason = null, initialEpisode = null) {
             seasonSelect.innerHTML = '';
             if (!currentItemData || !currentItemData.seasons) {
                 return;
@@ -1469,13 +1729,13 @@
                 seasonSelect.value = initialSeason;
             }
             if (seasons.length > 0) {
-                populateEpisodeSelect(seasonSelect.value, initialEpisode, initialSourceId);
+                populateEpisodeSelect(seasonSelect.value, initialEpisode);
             } else {
                 episodeSelect.innerHTML = '';
             }
         }
 
-        function populateEpisodeSelect(seasonNumber, initialEpisode = null, initialSourceId = null) {
+        function populateEpisodeSelect(seasonNumber, initialEpisode = null) {
             const season = (currentItemData.seasons || []).find(s => s.season_number == seasonNumber);
             episodeSelect.innerHTML = '';
             if (!season || !season.episodes || season.episodes.length === 0) {
@@ -1499,8 +1759,7 @@
             if (initialEpisode) {
                 episodeSelect.value = initialEpisode;
             }
-            // Pass initialSourceId down to populateSourceSelector
-            populateSourceSelector(initialSourceId); 
+            updatePlayer();
         }
 
         function updatePlayer() {
@@ -1518,8 +1777,15 @@
                 const currentEpisode = parseInt(episodeSelect.value);
                 const seasonData = currentItemData.seasons.find(s => s.season_number === currentSeason);
 
+                let maxEpisode = 0;
+                if (seasonData && seasonData.episodes) {
+                    maxEpisode = seasonData.episodes.length;
+                }
+                const maxSeason = currentItemData.seasons.slice(-1)[0]?.season_number || 1;
+
                 prevEpisodeBtn.disabled = currentEpisode <= 1 && currentSeason <= 1;
-                nextEpisodeBtn.disabled = currentEpisode >= seasonData?.episodes.length && currentSeason >= currentItemData.seasons.length;
+                nextEpisodeBtn.disabled = currentEpisode >= maxEpisode && currentSeason >= maxSeason;
+
 
                 const currentEpisodeData = seasonData?.episodes.find(e => e.episode_number === currentEpisode);
                 if (currentEpisodeData) {
@@ -1573,7 +1839,7 @@
             iframeContainer.appendChild(newIframe);
             videoPlayer = newIframe;
 
-            startParseProgressTracking(); // Start tracking (just setting the key and source ID)
+            startParseProgressTracking();
         }
 
         async function playTrailer() {
@@ -1593,8 +1859,6 @@
                 iframeContainer.appendChild(newIframe);
                 videoPlayer = newIframe;
                 stopParseProgressTracking();
-                lastVideoKey = null; // Don't save trailer progress
-                lastUsedSource = null; // Don't save trailer progress
             } else {
                 // Modified from alert() to a console log for safer execution
                 console.log('No trailer found for this title.');
@@ -1744,6 +2008,8 @@
                     populateEpisodeSelect(prevSeason.season_number, prevSeason.episodes.length);
                 }
             }
+            // FIX: Explicitly call updatePlayer after episode/season change via button
+            updatePlayer();
         });
         nextEpisodeBtn.addEventListener('click', () => {
             let currentSeason = parseInt(seasonSelect.value);
@@ -1758,6 +2024,8 @@
                     populateEpisodeSelect(nextSeason.season_number, 1);
                 }
             }
+            // FIX: Explicitly call updatePlayer after episode/season change via button
+            updatePlayer();
         });
 
         showNoSandboxBtn.addEventListener('click', () => {
@@ -1885,12 +2153,13 @@
             if (audioContext) return;
 
             try {
-                audioContext = new(window.AudioContext || window.webkitAudioContext)();
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
                 analyser = audioContext.createAnalyser();
                 analyser.fftSize = 128;
                 bufferLength = analyser.frequencyBinCount;
                 dataArray = new Uint8Array(bufferLength);
 
+                // FIX: Corrected this line to pass the HTML Audio Element, not its string src property
                 const source = audioContext.createMediaElementSource(audio);
                 source.connect(analyser);
                 analyser.connect(audioContext.destination);
@@ -1904,12 +2173,6 @@
         }
 
         function draw() {
-            // OPTIMIZATION: Only continue the loop if audio is playing
-            if (audio.paused && audio.ended) {
-                cancelAnimationFrame(animationFrameId);
-                return;
-            }
-
             animationFrameId = requestAnimationFrame(draw);
             if (!analyser) return;
             analyser.getByteFrequencyData(dataArray);
@@ -1929,7 +2192,7 @@
             }
         }
 
-        window.togglePlayback = function() {
+        window.togglePlayback = function () {
             initAudioContext();
             if (audio.paused || audio.ended) {
                 if (audioContext && audioContext.state === 'suspended') {
@@ -1940,7 +2203,6 @@
                 }
                 audio.play().then(() => {
                     updatePlaybackUI(true);
-                    draw(); // Start the animation loop when playing
                 }).catch(e => {
                     console.error("Playback failed:", e);
                     messageBox.textContent = "Playback blocked by browser.";
@@ -1965,12 +2227,14 @@
         }
 
         document.addEventListener('DOMContentLoaded', () => {
+            // Set initial sandbox mode to be correct for the first open
             isSandboxMode = true;
             populateSourceSelector();
 
             // Load all Parse data simultaneously
             Promise.all([
                 loadFavorites(),
+                loadRecentlyWatched(), // Load watched status for banners
                 loadContinueWatchingParse()
             ]).then(() => {
                 // Update UI elements dependent on Parse data after loading is complete
@@ -1996,3 +2260,4 @@
 </body>
 
 </html>
+
