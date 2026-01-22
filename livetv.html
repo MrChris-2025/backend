@@ -258,12 +258,10 @@
             statusContainer.classList.add('pulse-ring');
             liveTag.classList.remove('hidden');
             
-            // Scroll & Highlight
+            // Highlight active channel without scrolling
             document.querySelectorAll('.channel-card').forEach(el => el.classList.remove('active'));
             const activeEl = document.getElementById(`ch-${ch.id}`);
             if (activeEl) activeEl.classList.add('active');
-            
-            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
         function renderFiltered() {
