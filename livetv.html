@@ -106,6 +106,15 @@
                 return matchesSearch && matchesCountry;
             });
             render(filtered);
+
+                                // Exclusion List for Sports and specific Leagues
+                    const excludedKeywords = [
+                        'sport', 'racing', 'football', 'liga', 'espn', 'nba', 
+                        'astro', 'nfl', 'nhl', 'tennis', 'sec', 'red bull', 
+                        'mlb', 'golf', 'goltv', 'soccer', 'deportes', 'cricket', 
+                        'acc network', 'hubpremier', 'hub premier', 'dazn', 'btn', 
+                        'cbc news', 'cnbc', 'msg', 'telemundo', 'univision', 'wwe',
+                        'yes network' ];
         }
 
         searchInput.addEventListener('input', filter);
