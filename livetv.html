@@ -2,438 +2,116 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LiveTV - UK Edition</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Stream</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
-        
-        :root {
-            --onyx-bg: #050507;
-            --panel-bg: rgba(15, 15, 20, 0.7);
-            --accent: #3b82f6;
-        }
-
-        body {
-            font-family: 'Poppins', sans-serif;
-            background-color: var(--onyx-bg);
-            color: #ececec;
-            overflow: hidden;
-            height: 100vh;
-        }
-
-        h1, h2, .font-heading { font-family: 'Space Grotesk', sans-serif; }
-
-        .custom-scroll::-webkit-scrollbar { width: 4px; height: 4px; }
-        .custom-scroll::-webkit-scrollbar-track { background: transparent; }
-        .custom-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
-        
-        .glass-panel {
-            background: var(--panel-bg);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .channel-strip {
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            background: rgba(255, 255, 255, 0.02);
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-        }
-        .channel-strip:hover {
-            background: rgba(255, 255, 255, 0.08);
-            transform: translateY(-1px);
-            border-color: rgba(255, 255, 255, 0.15);
-        }
-        .channel-strip.active {
-            background: linear-gradient(145deg, rgba(59, 130, 246, 0.15), rgba(59, 130, 246, 0.05));
-            border-color: var(--accent);
-            box-shadow: 0 0 15px rgba(59, 130, 246, 0.2);
-        }
-
-        .epg-slot {
-            min-width: 280px;
-            flex-shrink: 0;
-            border-right: 1px solid rgba(255,255,255,0.05);
-            position: relative;
-        }
-        .epg-slot.live { 
-            background: linear-gradient(to bottom, rgba(59, 130, 246, 0.12), transparent); 
-            border-bottom: 3px solid var(--accent); 
-        }
-        .epg-slot.live::after {
-            content: "CURRENTLY AIRING";
-            position: absolute;
-            top: 0;
-            left: 0;
-            background: var(--accent);
-            color: white;
-            font-size: 7px;
-            font-weight: 900;
-            padding: 2px 6px;
-            letter-spacing: 0.05em;
-        }
-
-        #epg-scroller {
-            scroll-behavior: smooth;
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-        }
-        #epg-scroller::-webkit-scrollbar { display: none; }
-
-        .shimmer {
-            background: linear-gradient(90deg, #121217 0%, #1c1c24 50%, #121217 100%);
-            background-size: 200% 100%;
-            animation: shimmer-anim 1.5s infinite linear;
-        }
-        @keyframes shimmer-anim { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
-
-        .timeline-container {
-            display: flex;
-            background: rgba(255,255,255,0.03);
-            border-bottom: 1px solid rgba(255,255,255,0.05);
-            height: 28px;
-            align-items: center;
-        }
-        .timeline-hour {
-            min-width: 280px;
-            flex-shrink: 0;
-            font-size: 9px;
-            font-weight: 700;
-            color: #666;
-            padding-left: 12px;
-            border-right: 1px solid rgba(255,255,255,0.03);
-        }
+        body { background: #000; color: #fff; font-family: sans-serif; }
+        .player-box { position: sticky; top: 0; z-index: 100; background: #000; width: 100%; aspect-ratio: 16/9; border-bottom: 1px solid #333; }
+        iframe { width: 100%; height: 100%; border: none; }
+        .channel-item { border-bottom: 1px solid #222; }
+        .channel-item:active { background: #111; }
+        footer { position: fixed; bottom: 0; width: 100%; background: #0a0a0a; border-top: 1px solid #333; height: 60px; display: flex; align-items: center; padding: 0 15px; }
     </style>
 </head>
-<body class="flex flex-col h-screen">
+<body class="pb-20">
 
-    <nav class="h-16 flex items-center justify-between px-6 glass-panel z-50">
-        <div class="flex items-center gap-6">
-            <div class="flex items-center gap-3">
-                <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                    <i class="fa-solid fa-satellite-dish text-white text-sm"></i>
-                </div>
-                <h1 class="text-xl font-bold tracking-tight">LiveTV<span class="text-blue-500"> UK</span></h1>
-            </div>
-
-            <div class="flex items-center gap-3">
-                <select id="country-select" class="bg-white/5 border border-white/10 rounded-lg py-1.5 px-3 text-xs focus:outline-none outline-none cursor-pointer hover:bg-white/10 transition-colors">
-                    <option value="all">Global Feed</option>
-                    <option value="gb" selected>United Kingdom</option>
-                </select>
-                <div class="relative">
-                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 text-[10px]"></i>
-                    <input id="search-input" type="text" placeholder="Search UK channels..." 
-                           class="bg-white/5 border border-white/10 rounded-lg py-1.5 pl-8 pr-4 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 w-48 md:w-64">
-                </div>
-            </div>
+    <!-- 1. Player First -->
+    <div class="player-box">
+        <iframe id="vid-player" src="" allowfullscreen sandbox="allow-same-origin allow-scripts"></iframe>
+        <div id="no-signal" class="absolute inset-0 flex items-center justify-center text-gray-600 bg-black pointer-events-none">
+            NO SIGNAL SELECTED
         </div>
-
-        <div id="clock" class="text-sm font-bold text-blue-500 tracking-wider">--:-- --</div>
-    </nav>
-
-    <div class="flex flex-grow overflow-hidden">
-        <aside class="w-1/5 min-w-[240px] flex flex-col glass-panel border-r border-white/5 relative">
-            <div class="absolute top-2 right-2 flex flex-col gap-1 z-10">
-                <button onclick="scrollChannels(-1)" class="p-2 hover:bg-white/10 rounded-lg text-zinc-500 hover:text-white transition-colors">
-                    <i class="fa-solid fa-chevron-up text-xs"></i>
-                </button>
-                <button onclick="scrollChannels(1)" class="p-2 hover:bg-white/10 rounded-lg text-zinc-500 hover:text-white transition-colors">
-                    <i class="fa-solid fa-chevron-down text-xs"></i>
-                </button>
-            </div>
-            <div id="channel-list" class="flex-grow overflow-y-auto custom-scroll p-3 space-y-2">
-                <div class="h-16 w-full shimmer rounded-lg opacity-20"></div>
-                <div class="h-16 w-full shimmer rounded-lg opacity-10"></div>
-                <div class="h-16 w-full shimmer rounded-lg opacity-5"></div>
-            </div>
-        </aside>
-
-        <main class="w-4/5 flex flex-col bg-black/20">
-            <section class="relative h-[65%] flex items-center justify-center p-6">
-                <div class="relative w-full h-full aspect-video bg-black rounded-2xl overflow-hidden shadow-2xl border border-white/5 group">
-                    <iframe id="main-frame" class="w-full h-full border-none hidden" 
-                            allow="autoplay; fullscreen" 
-                            sandbox="allow-same-origin allow-scripts"></iframe>
-                    
-                    <div id="idle-screen" class="absolute inset-0 flex flex-col items-center justify-center text-center p-10">
-                        <i class="fa-solid fa-tv text-zinc-800 text-6xl mb-4"></i>
-                        <p class="text-zinc-600 font-bold uppercase tracking-widest text-xs">Select a UK Channel from the left</p>
-                    </div>
-
-                    <div class="absolute bottom-6 right-6 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                        <button onclick="toggleTheater()" class="p-3 bg-white/10 hover:bg-blue-600 rounded-xl backdrop-blur-md transition-all">
-                            <i class="fa-solid fa-expand"></i>
-                        </button>
-                    </div>
-                </div>
-            </section>
-
-            <section class="h-[35%] border-t border-white/5 glass-panel relative flex flex-col">
-                <div class="absolute inset-y-0 left-0 w-16 flex items-center justify-center z-10 pointer-events-none">
-                    <button onclick="scrollEPG(-1)" class="p-2 bg-zinc-900 border border-white/10 rounded-full pointer-events-auto hover:bg-zinc-800">
-                        <i class="fa-solid fa-arrow-left text-xs"></i>
-                    </button>
-                </div>
-                <div class="absolute inset-y-0 right-0 w-16 flex items-center justify-center z-10 pointer-events-none">
-                    <button onclick="scrollEPG(1)" class="p-2 bg-zinc-900 border border-white/10 rounded-full pointer-events-auto hover:bg-zinc-800">
-                        <i class="fa-solid fa-arrow-right text-xs"></i>
-                    </button>
-                </div>
-
-                <div class="px-6 py-2 border-b border-white/5 flex items-center justify-between bg-white/[0.02]">
-                    <span class="text-[9px] font-black uppercase tracking-widest text-zinc-500">Live EPG Data</span>
-                    <span id="active-ch-name" class="text-[9px] font-bold text-blue-500 uppercase tracking-widest"></span>
-                </div>
-                
-                <div class="flex-grow flex flex-col overflow-hidden relative">
-                    <div id="timeline-header" class="timeline-container overflow-hidden"></div>
-                    <div id="epg-scroller" class="flex-grow flex overflow-x-auto custom-scroll">
-                        <div class="w-full h-full flex items-center justify-center text-zinc-700 italic text-xs">Awaiting selection...</div>
-                    </div>
-                </div>
-            </section>
-        </main>
     </div>
 
-    <div id="theater-overlay" class="fixed inset-0 bg-black z-[100] hidden">
-        <button onclick="toggleTheater()" class="absolute top-6 right-6 w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center z-[110] transition-colors">
-            <i class="fa-solid fa-xmark text-xl"></i>
-        </button>
-        <div id="theater-mount" class="w-full h-full"></div>
+    <!-- 2. Search -->
+    <div class="p-3">
+        <input type="text" id="search" placeholder="Search Channels..." 
+            class="w-full bg-zinc-900 border border-zinc-700 rounded p-3 text-white outline-none focus:border-blue-500">
     </div>
+
+    <!-- 3. Country Dropdown -->
+    <div class="px-3 pb-3">
+        <select id="country" class="w-full bg-zinc-900 border border-zinc-700 rounded p-3 text-white outline-none">
+            <option value="all">UK & US (All)</option>
+            <option value="gb">United Kingdom</option>
+            <option value="us">United States</option>
+        </select>
+    </div>
+
+    <!-- 4. Stacked Channels -->
+    <div id="list" class="flex flex-col">
+        <div class="p-10 text-center text-zinc-500">Loading Data...</div>
+    </div>
+
+    <!-- 5. Footer (Show/Channel Info) -->
+    <footer>
+        <div class="flex flex-col truncate">
+            <span class="text-[10px] text-zinc-500 font-bold uppercase">Source: Live TV</span>
+            <span id="current-info" class="text-sm font-medium truncate italic text-blue-400">Select a channel to play...</span>
+        </div>
+    </footer>
 
     <script>
-        const API = 'https://api.cdn-live.tv/api/v1/channels/?user=cdnlivetv&plan=free';
-        const PROXY = "https://corsproxy.io/?";
-        const EPG_URL = "https://www.open-epg.com/generate/ratApjTpAJ.xml.gz";
+        const player = document.getElementById('vid-player');
+        const noSignal = document.getElementById('no-signal');
+        const listContainer = document.getElementById('list');
+        const searchInput = document.getElementById('search');
+        const countrySelect = document.getElementById('country');
+        const footerInfo = document.getElementById('current-info');
 
-        const COUNTRY_LOOKUP = {
-            "GB": "United Kingdom", "US": "United States", "CA": "Canada", "AU": "Australia"
-        };
+        let dataStore = [];
 
-        let state = {
-            channels: [],
-            epg: {},
-            active: null,
-            isTheater: false,
-            filters: { query: '', country: 'gb' } // Defaulting to UK
-        };
-
-        async function init() {
-            startClock();
-            generateTimeline();
-            await fetchChannels();
-            await loadEPG();
-            renderChannels();
-            
-            document.getElementById('search-input').oninput = (e) => {
-                state.filters.query = e.target.value;
-                renderChannels();
-            };
-            document.getElementById('country-select').onchange = (e) => {
-                state.filters.country = e.target.value;
-                renderChannels();
-            };
-
-            const scroller = document.getElementById('epg-scroller');
-            const header = document.getElementById('timeline-header');
-            scroller.addEventListener('scroll', () => {
-                header.scrollLeft = scroller.scrollLeft;
-            });
-        }
-
-        function generateTimeline() {
-            const header = document.getElementById('timeline-header');
-            header.innerHTML = '';
-            for (let i = 0; i < 24; i++) {
-                const hour = document.createElement('div');
-                hour.className = 'timeline-hour';
-                const label = i === 0 ? '12 AM' : i < 12 ? `${i} AM` : i === 12 ? '12 PM' : `${i-12} PM`;
-                hour.innerText = label;
-                header.appendChild(hour);
-            }
-        }
-
-        function startClock() {
-            const el = document.getElementById('clock');
-            const update = () => {
-                const now = new Date();
-                el.innerText = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: true });
-            };
-            update();
-            setInterval(update, 1000);
-        }
-
-        function getCountryName(code) {
-            if (!code) return "Global";
-            return COUNTRY_LOOKUP[code.toUpperCase()] || code.toUpperCase();
-        }
-
-        async function fetchChannels() {
+        async function load() {
             try {
-                const res = await fetch(API);
+                const res = await fetch('https://api.cdn-live.tv/api/v1/channels/?user=cdnlivetv&plan=free');
                 const data = await res.json();
-                state.channels = data.channels || [];
-                
-                const select = document.getElementById('country-select');
-                const codes = [...new Set(state.channels.map(c => c.code))].filter(Boolean);
-                
-                // Clear and repopulate to ensure UK is prominent but others available
-                select.innerHTML = '<option value="all">Global Feed</option>';
-                
-                const fullNames = codes.map(code => ({
-                    code: code,
-                    name: getCountryName(code)
-                })).sort((a, b) => a.name.localeCompare(b.name));
-
-                fullNames.forEach(item => {
-                    const opt = document.createElement('option');
-                    opt.value = item.code;
-                    opt.innerText = item.name;
-                    if(item.code === 'gb') opt.selected = true;
-                    select.appendChild(opt);
-                });
-            } catch (e) { console.error("Channel Fetch Error", e); }
-        }
-
-        async function loadEPG() {
-            try {
-                const res = await fetch(PROXY + encodeURIComponent(EPG_URL));
-                const buf = await res.arrayBuffer();
-                const xml = pako.ungzip(new Uint8Array(buf), { to: 'string' });
-                const doc = new DOMParser().parseFromString(xml, "text/xml");
-                doc.querySelectorAll('programme').forEach(p => {
-                    const cid = p.getAttribute('channel');
-                    if (!state.epg[cid]) state.epg[cid] = [];
-                    state.epg[cid].push({
-                        start: parseDate(p.getAttribute('start')),
-                        stop: parseDate(p.getAttribute('stop')),
-                        title: p.querySelector('title')?.textContent || 'Untitled',
-                        desc: p.querySelector('desc')?.textContent || ''
-                    });
-                });
-            } catch (e) { console.warn("EPG data unavailable"); }
-        }
-
-        function renderChannels() {
-            const list = document.getElementById('channel-list');
-            list.innerHTML = '';
-            
-            // Filter logic: Match Search Query AND Country (GB by default)
-            const filtered = state.channels.filter(c => {
-                const matchQ = c.name.toLowerCase().includes(state.filters.query.toLowerCase());
-                const matchC = state.filters.country === 'all' || c.code === state.filters.country;
-                return matchQ && matchC;
-            });
-
-            if (filtered.length === 0) {
-                list.innerHTML = '<div class="text-zinc-600 text-[10px] text-center mt-10">No channels found for this region.</div>';
-                return;
+                // Filter UK and US strictly
+                dataStore = data.channels.filter(c => c.code === 'us' || c.code === 'gb');
+                render(dataStore);
+            } catch (e) {
+                listContainer.innerHTML = '<div class="p-5 text-red-500">API Error</div>';
             }
+        }
 
-            filtered.forEach(ch => {
-                const isActive = state.active?.url === ch.url;
-                const btn = document.createElement('button');
-                btn.className = `channel-strip w-full flex items-center gap-3 p-3 rounded-xl cursor-pointer text-left ${isActive ? 'active' : ''}`;
-                btn.onclick = () => selectChannel(ch);
-                btn.innerHTML = `
-                    <div class="w-[57px] h-[40px] shrink-0 bg-black/40 rounded-lg border border-white/5 overflow-hidden flex items-center justify-center">
-                        <img src="${ch.image}" class="w-full h-full object-contain p-1" onerror="this.src='https://via.placeholder.com/60x40/000/333?text=UK'">
+        function render(channels) {
+            listContainer.innerHTML = '';
+            channels.forEach(ch => {
+                const div = document.createElement('div');
+                div.className = 'channel-item flex items-center p-3 gap-4 cursor-pointer';
+                div.innerHTML = `
+                    <img src="${ch.image}" class="w-12 h-12 object-contain bg-zinc-800 rounded">
+                    <div class="flex-1">
+                        <div class="font-bold text-sm">${ch.name}</div>
+                        <div class="text-xs text-zinc-500 uppercase">${ch.code === 'us' ? 'United States' : 'United Kingdom'}</div>
                     </div>
-                    <div class="min-w-0 flex-grow">
-                        <h4 class="text-[11px] font-bold truncate ${isActive ? 'text-blue-400' : 'text-zinc-300'}">${ch.name}</h4>
-                        <p class="text-[8px] text-zinc-500 uppercase font-black tracking-wider">United Kingdom</p>
-                    </div>
+                    <div class="w-2 h-2 rounded-full ${ch.status === 'online' ? 'bg-green-500' : 'bg-red-500'}"></div>
                 `;
-                list.appendChild(btn);
+                div.onclick = () => {
+                    noSignal.style.display = 'none';
+                    player.src = ch.url;
+                    footerInfo.innerText = "STREAMING: " + ch.name;
+                    window.scrollTo({top: 0, behavior: 'smooth'});
+                };
+                listContainer.appendChild(div);
             });
         }
 
-        function selectChannel(ch) {
-            state.active = ch;
-            document.getElementById('main-frame').src = ch.url;
-            document.getElementById('main-frame').classList.remove('hidden');
-            document.getElementById('idle-screen').classList.add('hidden');
-            document.getElementById('active-ch-name').innerText = ch.name;
-            renderChannels();
-            renderEPG(ch);
-        }
-
-        function renderEPG(ch) {
-            const scroller = document.getElementById('epg-scroller');
-            scroller.innerHTML = '';
-            
-            const epgId = Object.keys(state.epg).find(id => {
-                const normalizedId = id.toLowerCase().replace(/[^a-z0-9]/g, '');
-                const normalizedName = ch.name.toLowerCase().replace(/[^a-z0-9]/g, '');
-                return normalizedId.includes(normalizedName) || normalizedName.includes(normalizedId);
+        function filter() {
+            const s = searchInput.value.toLowerCase();
+            const c = countrySelect.value;
+            const filtered = dataStore.filter(ch => {
+                const matchesSearch = ch.name.toLowerCase().includes(s);
+                const matchesCountry = c === 'all' || ch.code === c;
+                return matchesSearch && matchesCountry;
             });
-
-            const schedule = state.epg[epgId] || [];
-
-            if (schedule.length === 0) {
-                scroller.innerHTML = `<div class="w-full h-full flex items-center justify-center text-zinc-700 text-[10px]">No EPG for ${ch.name}</div>`;
-                return;
-            }
-
-            const now = new Date();
-            const sorted = schedule.sort((a,b) => a.start - b.start);
-            
-            sorted.forEach(prog => {
-                const isLive = now >= prog.start && now < prog.stop;
-                const slot = document.createElement('div');
-                slot.className = `epg-slot p-5 ${isLive ? 'live' : ''}`;
-                
-                slot.innerHTML = `
-                    <div class="flex items-center justify-between mb-2">
-                        <span class="text-[9px] font-bold ${isLive ? 'text-blue-400' : 'text-zinc-500'}">${formatTime(prog.start)} - ${formatTime(prog.stop)}</span>
-                    </div>
-                    <h5 class="text-xs font-bold text-white mb-1 truncate">${prog.title}</h5>
-                    <p class="text-[10px] text-zinc-500 line-clamp-3 leading-snug">${prog.desc || 'Scheduled Programming'}</p>
-                `;
-                
-                if(isLive) slot.id = "current-live-slot";
-                scroller.appendChild(slot);
-            });
-
-            setTimeout(() => {
-                const liveEl = document.getElementById('current-live-slot');
-                if(liveEl) {
-                    scroller.scrollLeft = liveEl.offsetLeft - 100;
-                }
-            }, 100);
+            render(filtered);
         }
 
-        function parseDate(s) {
-            if (!s) return new Date();
-            return new Date(s.substring(0,4), s.substring(4,6)-1, s.substring(6,8), s.substring(8,10), s.substring(10,12));
-        }
+        searchInput.addEventListener('input', filter);
+        countrySelect.addEventListener('change', filter);
 
-        function formatTime(d) {
-            return d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: true });
-        }
-
-        function toggleTheater() {
-            state.isTheater = !state.isTheater;
-            const overlay = document.getElementById('theater-overlay');
-            const mount = document.getElementById('theater-mount');
-            if (state.isTheater && state.active) {
-                overlay.classList.remove('hidden');
-                mount.innerHTML = `<iframe src="${state.active.url}" class="w-full h-full border-none" allowfullscreen sandbox="allow-same-origin allow-scripts"></iframe>`;
-            } else {
-                overlay.classList.add('hidden');
-                mount.innerHTML = "";
-            }
-        }
-
-        function scrollEPG(dir) { document.getElementById('epg-scroller').scrollLeft += dir * 280; }
-        function scrollChannels(dir) { document.getElementById('channel-list').scrollTop += dir * 150; }
-
-        window.onload = init;
+        load();
     </script>
 </body>
 </html>
