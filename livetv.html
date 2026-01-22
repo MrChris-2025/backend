@@ -214,13 +214,21 @@
                     const name = c.name.toLowerCase();
                     const code = c.code.toLowerCase();
                     
-                    // Universal Sports Filter
-                    const isSports = name.includes('sport') || name.includes('racing') || name.includes('football') || name.includes('liga') || name.includes('espn');
-                    const isHub = name.includes('hubpremier') || name.includes('hub premier');
+                    // Exclusion List for Sports and specific Leagues
+                    const excludedKeywords = [
+                        'sport', 'racing', 'football', 'liga', 'espn', 'nba', 
+                        'astro', 'nfl', 'nhl', 'tennis', 'sec', 'red bull', 
+                        'mlb', 'golf', 'goltv', 'soccer', 'deportes', 'cricket', 
+                        'acc network', 'hubpremier', 'hub premier'
+                    ];
+
+                    // Check if channel name contains any excluded keywords
+                    const isExcluded = excludedKeywords.some(keyword => name.includes(keyword));
+                    
                     const isSkyNews = name.includes('sky news');
 
                     if (code !== 'gb' && code !== 'us') return false;
-                    if (isSports || isHub) return false;
+                    if (isExcluded) return false;
                     if (code === 'gb' && isSkyNews) return false;
 
                     return true;
