@@ -2,296 +2,174 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>StreamLine TV</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>UK Live Stream</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        :root {
-            --bg-main: #0f0a1a;
-            --bg-gradient: linear-gradient(180deg, #1a0b2e 0%, #0f0a1a 100%);
-            --accent: #a855f7;
-            --card-bg: rgba(30, 20, 50, 0.4);
-            --border-color: rgba(168, 85, 247, 0.15);
+        body { background: #050505; color: #fff; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+        .player-box { 
+            position: sticky; 
+            top: 0; 
+            z-index: 100; 
+            background: #000; 
+            width: 100%; 
+            aspect-ratio: 16/9; 
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+        }
+        iframe { width: 100%; height: 100%; border: none; }
+        .channel-item { 
+            border-bottom: 1px solid #1a1a1a; 
+            transition: background 0.2s;
+        }
+        .channel-item:active { background: #1a1a1a; }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: #050505; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
+
+        footer { 
+            position: fixed; 
+            bottom: 0; 
+            width: 100%; 
+            background: rgba(10, 10, 10, 0.95); 
+            backdrop-filter: blur(10px);
+            border-top: 1px solid #222; 
+            height: 65px; 
+            display: flex; 
+            align-items: center; 
+            padding: 0 20px; 
+            z-index: 100;
         }
         
-        body { 
-            background: var(--bg-main);
-            background-image: var(--bg-gradient);
-            background-attachment: fixed;
-            color: #f4f4f5; 
-            font-family: 'Inter', -apple-system, sans-serif;
-            -webkit-tap-highlight-color: transparent;
+        #player-overlay {
+            background: linear-gradient(to bottom, transparent, rgba(0,0,0,0.8));
+            pointer-events: none;
         }
-
-        .player-container {
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-            background: #000;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
-        }
-
-        .aspect-video {
-            position: relative;
-            width: 100%;
-            padding-bottom: 56.25%; /* 16:9 */
-            height: 0;
-            background: #000;
-        }
-
-        .aspect-video iframe {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            border: none;
-        }
-
-        .glass-nav {
-            background: rgba(15, 10, 26, 0.85);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .channel-card {
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            backdrop-filter: blur(5px);
-        }
-
-        .channel-card.active {
-            border-color: var(--accent);
-            background: rgba(168, 85, 247, 0.1);
-            box-shadow: 0 0 20px rgba(168, 85, 247, 0.15);
-        }
-
-        .logo-box {
-            width: 52px;
-            height: 52px;
-            background: rgba(0, 0, 0, 0.4);
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-            overflow: hidden;
-            border: 1px solid rgba(168, 85, 247, 0.1);
-        }
-
-        .tab-btn {
-            position: relative;
-            transition: all 0.3s ease;
-        }
-
-        .tab-btn.active {
-            color: #fff;
-        }
-
-        .tab-btn.active::after {
-            content: '';
-            position: absolute;
-            bottom: -4px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 4px;
-            height: 4px;
-            border-radius: 50%;
-            background: var(--accent);
-            box-shadow: 0 0 8px var(--accent);
-        }
-
-        footer {
-            height: 75px;
-            padding-bottom: env(safe-area-inset-bottom);
-            background: rgba(20, 10, 35, 0.95);
-            border-top: 1px solid var(--border-color);
-            backdrop-filter: blur(20px);
-        }
-
-        .pulse-ring {
-            position: relative;
-        }
-
-        .pulse-ring::before {
-            content: '';
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            background: var(--accent);
-            border-radius: 50%;
-            opacity: 0.5;
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0% { transform: scale(1); opacity: 0.5; }
-            70% { transform: scale(2.5); opacity: 0; }
-            100% { transform: scale(1); opacity: 0; }
-        }
-
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
-<body class="pb-28">
+<body class="pb-24">
 
-    <!-- Sticky Video Section -->
-    <div class="player-container">
-        <div class="aspect-video">
-            <iframe id="vid-player" src="about:blank" allowfullscreen sandbox="allow-same-origin allow-scripts"></iframe>
+    <!-- Video Player -->
+    <div class="player-box overflow-hidden">
+        <iframe id="vid-player" src="about:blank" allowfullscreen sandbox="allow-same-origin allow-scripts"></iframe>
+        <!-- Idle Overlay -->
+        <div id="player-idle" class="absolute inset-0 flex flex-col items-center justify-center bg-zinc-950 text-zinc-500">
+            <svg class="w-12 h-12 mb-2 opacity-20" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M21 3H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h5v2h8v-2h5c1.1 0 1.99-.9 1.99-2L23 5c0-1.1-.9-2-2-2zm0 14H3V5h18v12z"/>
+            </svg>
+            <p class="text-xs font-bold uppercase tracking-widest opacity-40">Select a channel to begin</p>
         </div>
     </div>
 
-    <!-- Navigation & Search -->
-    <div class="glass-nav sticky top-[56.25vw] z-[900] px-4 pt-4 pb-3">
-        <div class="flex items-center justify-between mb-4">
-            <div class="flex gap-6">
-                <button onclick="setFilter('gb')" id="btn-gb" class="tab-btn active text-xs font-black tracking-widest uppercase">UK</button>
-                <button onclick="setFilter('us')" id="btn-us" class="tab-btn text-zinc-500 text-xs font-black tracking-widest uppercase">USA</button>
-                <button onclick="setFilter('all')" id="btn-all" class="tab-btn text-zinc-500 text-xs font-black tracking-widest uppercase">Global</button>
-            </div>
-            <div class="text-[10px] font-bold text-purple-400/60 uppercase tracking-tighter" id="count-tag">0 Channels</div>
-        </div>
-        
+    <!-- Search Section -->
+    <div class="p-4 sticky top-[56.25vw] bg-[#050505] z-50">
         <div class="relative">
-            <input type="text" id="search" placeholder="Search by name..." 
-                class="w-full bg-[#1c1429] border border-purple-500/10 rounded-xl py-3 px-11 text-sm text-white placeholder-zinc-600 focus:bg-[#231a33] focus:border-purple-500/30 outline-none transition-all">
-            <svg class="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+            <input type="text" id="search" placeholder="Search UK Channels..." 
+                class="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-4 pl-11 text-white outline-none focus:border-blue-600 transition-all">
+            <svg class="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
             </svg>
         </div>
     </div>
 
-    <!-- Feed Container -->
-    <div id="list" class="px-4 mt-4 space-y-2 max-w-2xl mx-auto">
-        <!-- Skeleton Loader -->
-        <div class="animate-pulse space-y-3 p-10">
-            <div class="h-16 bg-purple-900/10 rounded-2xl"></div>
-            <div class="h-16 bg-purple-900/10 rounded-2xl w-3/4"></div>
-            <div class="h-16 bg-purple-900/10 rounded-2xl"></div>
+    <!-- Channel List -->
+    <div id="list" class="flex flex-col px-2">
+        <div class="p-20 text-center">
+            <div class="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500 mb-4"></div>
+            <p class="text-zinc-500 font-medium text-sm">Synchronizing UK Streams...</p>
         </div>
     </div>
 
-    <!-- Dynamic Footer -->
-    <footer class="fixed bottom-0 left-0 right-0 flex items-center px-6 z-[1000]">
-        <div class="flex items-center gap-4 w-full">
-            <div id="status-container" class="relative flex items-center justify-center w-2 h-2">
-                <div id="status-dot" class="w-2 h-2 rounded-full bg-zinc-700"></div>
-            </div>
-            <div class="flex-1 min-w-0">
-                <p class="text-[9px] font-black text-purple-400 uppercase tracking-[0.2em] mb-0.5">Live</p>
-                <h3 id="current-info" class="text-sm font-bold text-white truncate leading-none">Ready to stream</h3>
-            </div>
-            <div id="live-tag" class="hidden flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-red-500/10 border border-red-500/20">
-                <span class="w-1 h-1 rounded-full bg-red-500 animate-pulse"></span>
-                <span class="text-[9px] font-black text-red-500 uppercase">Live</span>
+    <!-- Footer Info -->
+    <footer>
+        <div class="flex items-center gap-3 w-full">
+            <div id="active-indicator" class="w-2.5 h-2.5 rounded-full bg-zinc-800"></div>
+            <div class="flex flex-col truncate">
+                <span class="text-[10px] text-zinc-600 font-bold uppercase tracking-widest">Live Status</span>
+                <span id="current-info" class="text-sm font-semibold truncate text-zinc-500">Standby Mode</span>
             </div>
         </div>
     </footer>
 
     <script>
         const player = document.getElementById('vid-player');
+        const playerIdle = document.getElementById('player-idle');
         const listContainer = document.getElementById('list');
         const searchInput = document.getElementById('search');
         const footerInfo = document.getElementById('current-info');
-        const statusDot = document.getElementById('status-dot');
-        const statusContainer = document.getElementById('status-container');
-        const liveTag = document.getElementById('live-tag');
-        const countTag = document.getElementById('count-tag');
+        const activeIndicator = document.getElementById('active-indicator');
 
         let dataStore = [];
-        let currentRegion = 'gb'; // Set UK as default
 
-        async function init() {
+        async function load() {
             try {
                 const res = await fetch('https://api.cdn-live.tv/api/v1/channels/?user=cdnlivetv&plan=free');
                 const data = await res.json();
                 
+                // UK Only, Filter Sports and HubPremier
                 dataStore = data.channels.filter(c => {
+                    const isUK = c.code === 'gb';
                     const name = c.name.toLowerCase();
-                    const code = c.code.toLowerCase();
-                    
-                    // Universal Sports Filter
-                    const isSports = name.includes('sport') || name.includes('racing') || name.includes('football') || name.includes('liga') || name.includes('espn');
+                    const isSports = name.includes('sport') || name.includes('racing') || name.includes('football') || name.includes('arena');
                     const isHub = name.includes('hubpremier') || name.includes('hub premier');
-                    const isSkyNews = name.includes('sky news');
-
-                    if (code !== 'gb' && code !== 'us') return false;
-                    if (isSports || isHub) return false;
-                    if (code === 'gb' && isSkyNews) return false;
-
-                    return true;
+                    return isUK && !isSports && !isHub;
                 });
 
-                renderFiltered();
+                if (dataStore.length > 0) {
+                    render(dataStore);
+                } else {
+                    listContainer.innerHTML = '<div class="p-10 text-center text-zinc-500">No channels available.</div>';
+                }
             } catch (e) {
-                listContainer.innerHTML = `<div class="p-20 text-center text-zinc-500 font-medium">Network Error. Check your connection.</div>`;
+                listContainer.innerHTML = '<div class="p-10 text-center text-red-400 font-medium">Network Error</div>';
             }
         }
 
-        function setFilter(region) {
-            currentRegion = region;
-            document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.id === `btn-${region}` ? btn.classList.add('active') : btn.classList.remove('active');
-                btn.classList.toggle('text-zinc-500', btn.id !== `btn-${region}`);
-            });
-            filter();
-        }
-
         function selectChannel(ch) {
+            // Hide the idle screen
+            playerIdle.style.display = 'none';
+            
+            // Set source
             player.src = ch.url;
+            
+            // Update UI
             footerInfo.innerText = ch.name;
+            footerInfo.classList.remove('text-zinc-500');
+            footerInfo.classList.add('text-blue-400');
             
-            // UI Updates
-            statusDot.classList.replace('bg-zinc-700', 'bg-purple-500');
-            statusContainer.classList.add('pulse-ring');
-            liveTag.classList.remove('hidden');
+            activeIndicator.classList.remove('bg-zinc-800');
+            activeIndicator.classList.add('bg-green-500', 'animate-pulse');
             
-            // Scroll & Highlight
-            document.querySelectorAll('.channel-card').forEach(el => el.classList.remove('active'));
-            const activeEl = document.getElementById(`ch-${ch.id}`);
-            if (activeEl) activeEl.classList.add('active');
-            
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
+            // Scroll to top to see player
+            window.scrollTo({top: 0, behavior: 'smooth'});
 
-        function renderFiltered() {
-            filter();
+            // Highlight in list
+            document.querySelectorAll('.channel-item').forEach(el => el.classList.remove('bg-zinc-900', 'border-blue-900'));
+            const activeEl = document.getElementById(`ch-${ch.id}`);
+            if (activeEl) {
+                activeEl.classList.add('bg-zinc-900', 'border-blue-900');
+            }
         }
 
         function render(channels) {
             listContainer.innerHTML = '';
-            countTag.innerText = `${channels.length} Channels`;
-
-            if (channels.length === 0) {
-                listContainer.innerHTML = `<div class="p-20 text-center text-zinc-600 text-sm italic">No channels found in this section.</div>`;
-                return;
-            }
-
             channels.forEach(ch => {
                 const div = document.createElement('div');
                 div.id = `ch-${ch.id}`;
-                div.className = 'channel-card flex items-center p-3.5 gap-4 rounded-2xl cursor-pointer';
-                
-                const logo = ch.image && ch.image.trim() !== "" 
-                    ? `<img src="${ch.image}" class="max-w-[85%] max-h-[85%] object-contain" onerror="this.remove()">` 
-                    : ``;
-
+                div.className = 'channel-item flex items-center p-4 gap-4 cursor-pointer rounded-xl mx-2 mb-1 border border-transparent';
                 div.innerHTML = `
-                    <div class="logo-box">${logo}</div>
-                    <div class="flex-1 min-w-0">
-                        <div class="font-bold text-[15px] text-zinc-100 truncate">${ch.name}</div>
-                        <div class="flex items-center gap-1.5 mt-0.5">
-                            <span class="text-[10px] font-bold text-purple-400/60 uppercase tracking-wide">
-                                ${ch.code === 'gb' ? 'United Kingdom' : 'United States'}
-                            </span>
-                        </div>
+                    <div class="relative">
+                        <img src="${ch.image}" class="w-14 h-14 object-contain bg-zinc-900 rounded-lg border border-zinc-800 p-1" 
+                             onerror="this.src='https://via.placeholder.com/60?text=TV'">
                     </div>
-                    <div class="flex items-center justify-center w-8 h-8 rounded-full bg-purple-900/20 text-purple-400/40">
-                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M4.555 5.168A1 1 0 003 6.07v7.86a1 1 0 001.555.832l6.666-3.93a1 1 0 000-1.664l-6.666-3.93z"></path></svg>
+                    <div class="flex-1 min-w-0">
+                        <div class="font-bold text-base text-zinc-100 truncate">${ch.name}</div>
+                        <div class="text-xs text-zinc-500 font-medium uppercase tracking-tight">United Kingdom</div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <div class="w-2 h-2 rounded-full ${ch.status === 'online' ? 'bg-green-500' : 'bg-zinc-700'}"></div>
+                        <svg class="w-5 h-5 text-zinc-700" fill="currentColor" viewBox="0 0 20 20"><path d="M4.555 5.168A1 1 0 003 6.07v7.86a1 1 0 001.555.832l6.666-3.93a1 1 0 000-1.664l-6.666-3.93z"></path></svg>
                     </div>
                 `;
                 div.onclick = () => selectChannel(ch);
@@ -301,16 +179,14 @@
 
         function filter() {
             const s = searchInput.value.toLowerCase();
-            const filtered = dataStore.filter(ch => {
-                const matchesSearch = ch.name.toLowerCase().includes(s);
-                const matchesRegion = currentRegion === 'all' || ch.code.toLowerCase() === currentRegion;
-                return matchesSearch && matchesRegion;
-            });
+            const filtered = dataStore.filter(ch => ch.name.toLowerCase().includes(s));
             render(filtered);
         }
 
         searchInput.addEventListener('input', filter);
-        init();
+
+        load();
     </script>
 </body>
 </html>
+
