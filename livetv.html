@@ -21,6 +21,7 @@
             color: #f4f4f5; 
             font-family: 'Inter', -apple-system, sans-serif;
             -webkit-tap-highlight-color: transparent;
+            overflow-x: hidden;
         }
 
         .player-container {
@@ -64,8 +65,9 @@
 
         .channel-card.active {
             border-color: var(--accent) !important;
-            background: rgba(168, 85, 247, 0.15) !important;
-            box-shadow: 0 0 20px rgba(168, 85, 247, 0.15);
+            background: rgba(168, 85, 247, 0.25) !important;
+            box-shadow: 0 0 20px rgba(168, 85, 247, 0.1);
+            transform: scale(1.01);
         }
 
         .logo-box {
@@ -138,15 +140,13 @@
 </head>
 <body class="pb-28">
 
-    <!-- Sticky Video Section -->
     <div class="player-container">
         <div class="aspect-video">
             <iframe id="vid-player" src="about:blank" allowfullscreen sandbox="allow-same-origin allow-scripts"></iframe>
         </div>
     </div>
 
-    <!-- Navigation & Search -->
-    <div class="glass-nav sticky top-[56.25vw] z-[900] px-4 pt-4 pb-3">
+    <div class="glass-nav sticky top-0 md:top-[56.25vw] z-[900] px-4 pt-4 pb-3">
         <div class="flex items-center justify-between mb-4">
             <div class="flex gap-6">
                 <button onclick="setFilter('gb')" id="btn-gb" class="tab-btn active text-xs font-black tracking-widest uppercase">UK</button>
@@ -165,9 +165,7 @@
         </div>
     </div>
 
-    <!-- Feed Container -->
     <div id="list" class="px-4 mt-4 space-y-2 max-w-2xl mx-auto">
-        <!-- Skeleton Loader -->
         <div class="animate-pulse space-y-3 p-10">
             <div class="h-16 bg-purple-900/10 rounded-2xl"></div>
             <div class="h-16 bg-purple-900/10 rounded-2xl w-3/4"></div>
@@ -175,7 +173,6 @@
         </div>
     </div>
 
-    <!-- Dynamic Footer -->
     <footer class="fixed bottom-0 left-0 right-0 flex items-center px-6 z-[1000]">
         <div class="flex items-center gap-4 w-full">
             <div id="status-container" class="relative flex items-center justify-center w-2 h-2">
@@ -214,35 +211,25 @@
                 dataStore = data.channels.filter(c => {
                     const name = c.name.toLowerCase();
                     const code = c.code.toLowerCase();
-                    
-                    const excludedKeywords = [
-                        'sport', 'racing', 'football', 'liga', 'espn', 'nba', 
-                        'astro', 'nfl', 'nhl', 'tennis', 'sec', 'red bull', 
-                        'mlb', 'golf', 'goltv', 'soccer', 'deportes', 'cricket', 
-                        'acc network', 'hubpremier', 'hub premier', 'dazn', 'wwe', 'yes'
-                    ];
-
-                    const isExcluded = excludedKeywords.some(keyword => name.includes(keyword));
-                    const isSkyNews = name.includes('sky news');
-
+                    const excludedKeywords = ['sport', 'racing', 'football', 'liga', 'espn', 'nba', 'astro', 'nfl', 'nhl', 'tennis', 'sec', 'red bull', 'mlb', 'golf', 'goltv', 'soccer', 'deportes', 'cricket', 'acc network', 'hubpremier', 'hub premier', 'dazn', 'wwe', 'yes'];
                     if (code !== 'gb' && code !== 'us') return false;
-                    if (isExcluded) return false;
-                    if (code === 'gb' && isSkyNews) return false;
-
+                    if (excludedKeywords.some(kw => name.includes(kw))) return false;
+                    if (code === 'gb' && name.includes('sky news')) return false;
                     return true;
                 });
 
-                renderFiltered();
+                filter();
             } catch (e) {
-                listContainer.innerHTML = `<div class="p-20 text-center text-zinc-500 font-medium">Network Error. Check your connection.</div>`;
+                listContainer.innerHTML = `<div class="p-20 text-center text-zinc-500 font-medium">Network Error</div>`;
             }
         }
 
         function setFilter(region) {
             currentRegion = region;
             document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.id === `btn-${region}` ? btn.classList.add('active') : btn.classList.remove('active');
-                btn.classList.toggle('text-zinc-500', btn.id !== `btn-${region}`);
+                const isActive = btn.id === `btn-${region}`;
+                btn.classList.toggle('active', isActive);
+                btn.classList.toggle('text-zinc-500', !isActive);
             });
             filter();
         }
@@ -252,18 +239,17 @@
             footerInfo.innerText = ch.name;
             currentChannelId = ch.id;
             
-            // UI Status Updates
             statusDot.classList.replace('bg-zinc-700', 'bg-purple-500');
             statusContainer.classList.add('pulse-ring');
             liveTag.classList.remove('hidden');
             
-            // Update highlights without scrolling
             updateHighlights();
         }
 
         function updateHighlights() {
-            document.querySelectorAll('.channel-card').forEach(el => {
-                if (el.id === `ch-${currentChannelId}`) {
+            const allCards = document.querySelectorAll('.channel-card');
+            allCards.forEach(el => {
+                if (el.getAttribute('data-id') == currentChannelId) {
                     el.classList.add('active');
                 } else {
                     el.classList.remove('active');
@@ -271,32 +257,23 @@
             });
         }
 
-        function renderFiltered() {
-            filter();
-        }
-
         function render(channels) {
             listContainer.innerHTML = '';
             countTag.innerText = `${channels.length} Channels`;
 
             if (channels.length === 0) {
-                listContainer.innerHTML = `<div class="p-20 text-center text-zinc-600 text-sm italic">No channels found in this section.</div>`;
+                listContainer.innerHTML = `<div class="p-20 text-center text-zinc-600 text-sm italic">No results found</div>`;
                 return;
             }
 
             channels.forEach(ch => {
                 const div = document.createElement('div');
-                div.id = `ch-${ch.id}`;
-                div.className = 'channel-card flex items-center p-3.5 gap-4 rounded-2xl cursor-pointer';
-                
-                // Keep active state if this channel is currently playing
-                if (currentChannelId === ch.id) {
-                    div.classList.add('active');
-                }
+                div.className = `channel-card flex items-center p-3.5 gap-4 rounded-2xl cursor-pointer ${currentChannelId == ch.id ? 'active' : ''}`;
+                div.setAttribute('data-id', ch.id);
                 
                 const logo = ch.image && ch.image.trim() !== "" 
-                    ? `<img src="${ch.image}" class="max-w-[85%] max-h-[85%] object-contain" onerror="this.remove()">` 
-                    : ``;
+                    ? `<img src="${ch.image}" class="max-w-[85%] max-h-[85%] object-contain" onerror="this.parentElement.innerHTML='<span class=\'text-xs text-zinc-600 font-bold\'>TV</span>'">` 
+                    : `<span class="text-xs text-zinc-600 font-bold">TV</span>`;
 
                 div.innerHTML = `
                     <div class="logo-box">${logo}</div>
@@ -304,7 +281,7 @@
                         <div class="font-bold text-[15px] text-zinc-100 truncate">${ch.name}</div>
                         <div class="flex items-center gap-1.5 mt-0.5">
                             <span class="text-[10px] font-bold text-purple-400/60 uppercase tracking-wide">
-                                ${ch.code === 'gb' ? 'United Kingdom' : 'United States'}
+                                ${ch.code.toUpperCase()}
                             </span>
                         </div>
                     </div>
