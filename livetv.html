@@ -63,8 +63,8 @@
         }
 
         .channel-card.active {
-            border-color: var(--accent);
-            background: rgba(168, 85, 247, 0.1);
+            border-color: var(--accent) !important;
+            background: rgba(168, 85, 247, 0.15) !important;
             box-shadow: 0 0 20px rgba(168, 85, 247, 0.15);
         }
 
@@ -203,8 +203,8 @@
         const countTag = document.getElementById('count-tag');
 
         let dataStore = [];
-        let currentRegion = 'gb'; // Set UK as default
-        let selectedChannelId = null; // Track selected channel
+        let currentRegion = 'gb'; 
+        let selectedChannelId = null; 
 
         async function init() {
             try {
@@ -215,7 +215,6 @@
                     const name = c.name.toLowerCase();
                     const code = c.code.toLowerCase();
                     
-                    // Exclusion List for Sports and specific Leagues
                     const excludedKeywords = [
                         'sport', 'racing', 'football', 'liga', 'espn', 'nba', 
                         'astro', 'nfl', 'nhl', 'tennis', 'sec', 'red bull', 
@@ -223,9 +222,7 @@
                         'acc network', 'hubpremier', 'hub premier'
                     ];
 
-                    // Check if channel name contains any excluded keywords
                     const isExcluded = excludedKeywords.some(keyword => name.includes(keyword));
-                    
                     const isSkyNews = name.includes('sky news');
 
                     if (code !== 'gb' && code !== 'us') return false;
@@ -253,14 +250,13 @@
         function selectChannel(ch) {
             player.src = ch.url;
             footerInfo.innerText = ch.name;
-            selectedChannelId = ch.id; // Store ID
+            selectedChannelId = ch.id; 
             
-            // UI Updates
             statusDot.classList.replace('bg-zinc-700', 'bg-purple-500');
             statusContainer.classList.add('pulse-ring');
             liveTag.classList.remove('hidden');
             
-            // Highlight
+            // Clean up existing highlights and apply to new target immediately
             document.querySelectorAll('.channel-card').forEach(el => el.classList.remove('active'));
             const activeEl = document.getElementById(`ch-${ch.id}`);
             if (activeEl) activeEl.classList.add('active');
@@ -284,9 +280,10 @@
             channels.forEach(ch => {
                 const div = document.createElement('div');
                 div.id = `ch-${ch.id}`;
-                // Apply active class if this channel is the one currently selected
-                const isActive = selectedChannelId === ch.id ? 'active' : '';
-                div.className = `channel-card flex items-center p-3.5 gap-4 rounded-2xl cursor-pointer ${isActive}`;
+                
+                // Compare explicitly to current selected ID
+                const isActive = (selectedChannelId === ch.id);
+                div.className = `channel-card flex items-center p-3.5 gap-4 rounded-2xl cursor-pointer ${isActive ? 'active' : ''}`;
                 
                 const logo = ch.image && ch.image.trim() !== "" 
                     ? `<img src="${ch.image}" class="max-w-[85%] max-h-[85%] object-contain" onerror="this.remove()">` 
