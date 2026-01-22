@@ -6,8 +6,17 @@
     <title>LiveTV</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Medium Purple Theme */
-        body { background: #1a1625; color: #fff; font-family: sans-serif; -webkit-user-select: none; }
+        /* Medium Purple Color Palette */
+        :root {
+            --bg-color: #1e1b2e;
+            --card-bg: #2d2a45;
+            --accent-purple: #8b5cf6;
+            --border-color: #443d66;
+            --text-muted: #a78bfa;
+            --highlight: #5b21b6;
+        }
+
+        body { background: var(--bg-color); color: #fff; font-family: sans-serif; -webkit-user-select: none; }
         
         .player-box { 
             position: sticky; 
@@ -16,78 +25,74 @@
             background: #000; 
             width: 100%; 
             aspect-ratio: 16/9; 
-            border-bottom: 2px solid #7c3aed; 
+            border-bottom: 2px solid var(--accent-purple); 
         }
         
         iframe { width: 100%; height: 100%; border: none; }
         
         .channel-item { 
-            border-bottom: 1px solid #2d2640; 
+            border-bottom: 1px solid var(--border-color); 
             transition: all 0.2s ease; 
-            cursor: pointer;
         }
         
-        .channel-item:active { background: #4c1d95; }
-        
-        /* Highlight state for the selected channel */
+        /* Highlight selected channel */
         .channel-item.active-channel {
-            background: #5b21b6 !important;
-            border-left: 4px solid #a78bfa;
-            position: relative;
+            background: var(--highlight);
+            border-left: 4px solid var(--accent-purple);
         }
 
+        .channel-item:active:not(.active-channel) { background: #3c375a; }
+        
         footer { 
             position: fixed; 
             bottom: 0; 
             width: 100%; 
-            background: #2e1065; 
-            border-top: 1px solid #7c3aed; 
+            background: #13111c; 
+            border-top: 1px solid var(--border-color); 
             height: 65px; 
             display: flex; 
             align-items: center; 
             padding: 0 20px; 
             z-index: 100; 
         }
-        
-        select, input { -webkit-appearance: none; }
 
-        .custom-input {
-            background: #2d2640;
-            border: 1px solid #4c1d95;
-            color: white;
-            transition: border-color 0.2s;
+        select, input { 
+            -webkit-appearance: none; 
+            background: var(--card-bg) !important;
+            border: 1px solid var(--border-color) !important;
         }
         
-        .custom-input:focus {
-            border-color: #a78bfa;
-            outline: none;
+        input:focus, select:focus {
+            border-color: var(--accent-purple) !important;
         }
+
+        .pulse-text { color: var(--text-muted); }
     </style>
 </head>
 <body class="pb-24">
 
-    <!-- 1. Player (No change to aspect ratio/stickiness) -->
+    <!-- 1. Player Box -->
     <div class="player-box shadow-2xl">
         <iframe id="vid-player" src="" allowfullscreen sandbox="allow-same-origin allow-scripts"></iframe>
-        <div id="no-signal" class="absolute inset-0 flex flex-col items-center justify-center text-purple-300 bg-zinc-950 pointer-events-none">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mb-3 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <div id="no-signal" class="absolute inset-0 flex flex-col items-center justify-center text-purple-400 bg-[#0f0e17] pointer-events-none">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 mb-2 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
             </svg>
-            <span class="text-[10px] font-bold uppercase tracking-[0.2em]">Select a Channel to Watch</span>
+            <span class="text-[10px] font-bold uppercase tracking-[0.2em]">Select Feed</span>
         </div>
     </div>
 
     <!-- 2. Search -->
     <div class="p-4">
         <input type="text" id="search" placeholder="Search UK & US channels..." 
-            class="w-full custom-input rounded-xl p-4 text-white">
+            class="w-full rounded-xl p-4 text-white outline-none">
     </div>
 
-    <!-- 3. Country Dropdown -->
+    <!-- 3. Country Dropdown (Defaulted to GB) -->
     <div class="px-4 pb-4">
         <div class="relative">
-            <select id="country" class="w-full custom-input rounded-xl p-4 text-white appearance-none">
-                <option value="gb">United Kingdom</option>
+            <select id="country" class="w-full rounded-xl p-4 text-white outline-none appearance-none">
+                <option value="gb" selected>United Kingdom</option>
                 <option value="us">United States</option>
             </select>
             <div class="absolute right-4 top-5 pointer-events-none text-purple-400">
@@ -100,14 +105,14 @@
 
     <!-- 4. Stacked Channels -->
     <div id="list" class="flex flex-col">
-        <div class="p-20 text-center text-purple-400 animate-pulse text-sm font-medium">ESTABLISHING ENCRYPTED LINK...</div>
+        <div class="p-20 text-center pulse-text animate-pulse text-sm font-medium tracking-widest">INITIALIZING SECURE LINK...</div>
     </div>
 
-    <!-- 5. Footer (Show Info) -->
+    <!-- 5. Footer -->
     <footer>
         <div class="flex flex-col truncate w-full">
-            <span id="footer-label" class="text-[10px] text-purple-300 font-black uppercase tracking-widest opacity-80">System Ready</span>
-            <span id="current-info" class="text-sm font-bold truncate text-white">Waiting for selection...</span>
+            <span id="footer-label" class="text-[10px] text-purple-400 font-black uppercase tracking-tighter">System Ready</span>
+            <span id="current-info" class="text-sm font-bold truncate text-zinc-100">Select channel above</span>
         </div>
     </footer>
 
@@ -130,7 +135,7 @@
         ];
 
         let dataStore = [];
-        let currentActiveUrl = '';
+        let activeUrl = "";
 
         async function load() {
             try {
@@ -145,9 +150,10 @@
                     return isCorrectRegion && !isExcluded;
                 });
 
-                render(dataStore);
+                // Initial render defaults to filter selection (GB)
+                filter();
             } catch (e) {
-                listContainer.innerHTML = '<div class="p-10 text-center text-red-400 font-bold text-xs">DATA FETCH ERROR</div>';
+                listContainer.innerHTML = '<div class="p-10 text-center text-red-400 font-bold text-xs uppercase">Server Unavailable</div>';
             }
         }
 
@@ -155,45 +161,36 @@
             listContainer.innerHTML = '';
             
             if(channels.length === 0) {
-                listContainer.innerHTML = '<div class="p-20 text-center text-purple-400/50 text-sm uppercase font-bold">No results found</div>';
+                listContainer.innerHTML = '<div class="p-20 text-center text-purple-400/50 text-xs font-bold uppercase tracking-widest">No Matches Found</div>';
                 return;
             }
 
             channels.forEach(ch => {
+                const isSelected = ch.url === activeUrl;
                 const div = document.createElement('div');
-                // Check if this channel is currently playing
-                const isActive = ch.url === currentActiveUrl;
-                
-                div.className = `channel-item flex items-center p-4 gap-4 ${isActive ? 'active-channel' : ''}`;
+                div.className = `channel-item flex items-center p-4 gap-4 cursor-pointer ${isSelected ? 'active-channel' : ''}`;
                 div.innerHTML = `
-                    <div class="w-14 h-10 flex-shrink-0 bg-black/40 rounded-lg flex items-center justify-center overflow-hidden border border-purple-900/50">
+                    <div class="w-14 h-10 flex-shrink-0 bg-[#13111c] rounded-lg flex items-center justify-center overflow-hidden border border-purple-900/30">
                         <img src="${ch.image}" class="max-w-full max-h-full object-contain" onerror="this.style.display='none'">
                     </div>
                     <div class="flex-1 overflow-hidden">
-                        <div class="font-bold text-[15px] ${isActive ? 'text-white' : 'text-purple-100'} truncate uppercase tracking-tight">${ch.name}</div>
-                        <div class="text-[10px] ${isActive ? 'text-purple-200' : 'text-purple-400/70'} font-bold uppercase">${ch.code === 'us' ? 'United States' : 'United Kingdom'}</div>
+                        <div class="font-bold text-[15px] ${isSelected ? 'text-white' : 'text-purple-50'} truncate uppercase tracking-tight">${ch.name}</div>
+                        <div class="text-[10px] text-purple-400/70 font-bold uppercase">${ch.code === 'us' ? 'United States' : 'United Kingdom'}</div>
                     </div>
                     <div class="flex flex-col items-end">
-                        <div class="w-2 h-2 rounded-full ${ch.status === 'online' ? 'bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.5)]' : 'bg-zinc-600'}"></div>
+                        <div class="w-1.5 h-1.5 rounded-full ${ch.status === 'online' ? 'bg-green-400 shadow-[0_0_8px_#4ade80]' : 'bg-zinc-600'}"></div>
                     </div>
                 `;
                 
                 div.onclick = () => {
-                    // Update global state
-                    currentActiveUrl = ch.url;
-                    
-                    // UI Transitions
+                    activeUrl = ch.url;
                     noSignal.style.display = 'none';
                     player.src = ch.url;
                     footerInfo.innerText = ch.name;
-                    footerLabel.innerText = "STREAM ACTIVE • " + (ch.code === 'us' ? 'US' : 'UK');
+                    footerLabel.innerText = "LINK ESTABLISHED";
                     
-                    // Re-render to update highlights without scrolling
-                    render(dataStore.filter(item => {
-                        const s = searchInput.value.toLowerCase();
-                        const c = countrySelect.value;
-                        return item.name.toLowerCase().includes(s) && (c === 'all' || item.code === c);
-                    }));
+                    // Re-render only to update highlights without scrolling page
+                    filter();
                 };
                 listContainer.appendChild(div);
             });
