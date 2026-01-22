@@ -3,102 +3,62 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>UK Live Stream</title>
+    <title>Stream</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { background: #050505; color: #fff; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
-        .player-box { 
-            position: sticky; 
-            top: 0; 
-            z-index: 100; 
-            background: #000; 
-            width: 100%; 
-            aspect-ratio: 16/9; 
-            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-        }
+        body { background: #000; color: #fff; font-family: sans-serif; }
+        .player-box { position: sticky; top: 0; z-index: 100; background: #000; width: 100%; aspect-ratio: 16/9; border-bottom: 1px solid #333; }
         iframe { width: 100%; height: 100%; border: none; }
-        .channel-item { 
-            border-bottom: 1px solid #1a1a1a; 
-            transition: background 0.2s;
-        }
-        .channel-item:active { background: #1a1a1a; }
-        
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-track { background: #050505; }
-        ::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
-
-        footer { 
-            position: fixed; 
-            bottom: 0; 
-            width: 100%; 
-            background: rgba(10, 10, 10, 0.95); 
-            backdrop-filter: blur(10px);
-            border-top: 1px solid #222; 
-            height: 65px; 
-            display: flex; 
-            align-items: center; 
-            padding: 0 20px; 
-            z-index: 100;
-        }
-        
-        #player-overlay {
-            background: linear-gradient(to bottom, transparent, rgba(0,0,0,0.8));
-            pointer-events: none;
-        }
+        .channel-item { border-bottom: 1px solid #222; }
+        .channel-item:active { background: #111; }
+        footer { position: fixed; bottom: 0; width: 100%; background: #0a0a0a; border-top: 1px solid #333; height: 60px; display: flex; align-items: center; padding: 0 15px; }
     </style>
 </head>
-<body class="pb-24">
+<body class="pb-20">
 
-    <!-- Video Player -->
-    <div class="player-box overflow-hidden">
-        <iframe id="vid-player" src="about:blank" allowfullscreen sandbox="allow-same-origin allow-scripts"></iframe>
-        <!-- Idle Overlay -->
-        <div id="player-idle" class="absolute inset-0 flex flex-col items-center justify-center bg-zinc-950 text-zinc-500">
-            <svg class="w-12 h-12 mb-2 opacity-20" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M21 3H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h5v2h8v-2h5c1.1 0 1.99-.9 1.99-2L23 5c0-1.1-.9-2-2-2zm0 14H3V5h18v12z"/>
-            </svg>
-            <p class="text-xs font-bold uppercase tracking-widest opacity-40">Select a channel to begin</p>
+    <!-- 1. Player First -->
+    <div class="player-box">
+        <iframe id="vid-player" src="" allowfullscreen sandbox="allow-same-origin allow-scripts"></iframe>
+        <div id="no-signal" class="absolute inset-0 flex items-center justify-center text-gray-600 bg-black pointer-events-none">
+            NO SIGNAL SELECTED
         </div>
     </div>
 
-    <!-- Search Section -->
-    <div class="p-4 sticky top-[56.25vw] bg-[#050505] z-50">
-        <div class="relative">
-            <input type="text" id="search" placeholder="Search UK Channels..." 
-                class="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-4 pl-11 text-white outline-none focus:border-blue-600 transition-all">
-            <svg class="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-            </svg>
-        </div>
+    <!-- 2. Search -->
+    <div class="p-3">
+        <input type="text" id="search" placeholder="Search Channels..." 
+            class="w-full bg-zinc-900 border border-zinc-700 rounded p-3 text-white outline-none focus:border-blue-500">
     </div>
 
-    <!-- Channel List -->
-    <div id="list" class="flex flex-col px-2">
-        <div class="p-20 text-center">
-            <div class="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500 mb-4"></div>
-            <p class="text-zinc-500 font-medium text-sm">Synchronizing UK Streams...</p>
-        </div>
+    <!-- 3. Country Dropdown -->
+    <div class="px-3 pb-3">
+        <select id="country" class="w-full bg-zinc-900 border border-zinc-700 rounded p-3 text-white outline-none">
+            <option value="all">UK & US (All)</option>
+            <option value="gb">United Kingdom</option>
+            <option value="us">United States</option>
+        </select>
     </div>
 
-    <!-- Footer Info -->
+    <!-- 4. Stacked Channels -->
+    <div id="list" class="flex flex-col">
+        <div class="p-10 text-center text-zinc-500">Loading Data...</div>
+    </div>
+
+    <!-- 5. Footer (Show/Channel Info) -->
     <footer>
-        <div class="flex items-center gap-3 w-full">
-            <div id="active-indicator" class="w-2.5 h-2.5 rounded-full bg-zinc-800"></div>
-            <div class="flex flex-col truncate">
-                <span class="text-[10px] text-zinc-600 font-bold uppercase tracking-widest">Live Status</span>
-                <span id="current-info" class="text-sm font-semibold truncate text-zinc-500">Standby Mode</span>
-            </div>
+        <div class="flex flex-col truncate">
+            <span class="text-[10px] text-zinc-500 font-bold uppercase">Source: Live TV</span>
+            <span id="current-info" class="text-sm font-medium truncate italic text-blue-400">Select a channel to play...</span>
         </div>
     </footer>
 
     <script>
         const player = document.getElementById('vid-player');
-        const playerIdle = document.getElementById('player-idle');
+        const noSignal = document.getElementById('no-signal');
         const listContainer = document.getElementById('list');
         const searchInput = document.getElementById('search');
+        const countrySelect = document.getElementById('country');
         const footerInfo = document.getElementById('current-info');
-        const activeIndicator = document.getElementById('active-indicator');
 
         let dataStore = [];
 
@@ -106,49 +66,11 @@
             try {
                 const res = await fetch('https://api.cdn-live.tv/api/v1/channels/?user=cdnlivetv&plan=free');
                 const data = await res.json();
-                
-                // UK Only, Filter Sports and HubPremier
-                dataStore = data.channels.filter(c => {
-                    const isUK = c.code === 'gb';
-                    const name = c.name.toLowerCase();
-                    const isSports = name.includes('sport') || name.includes('racing') || name.includes('football') || name.includes('arena');
-                    const isHub = name.includes('hubpremier') || name.includes('hub premier');
-                    return isUK && !isSports && !isHub;
-                });
-
-                if (dataStore.length > 0) {
-                    render(dataStore);
-                } else {
-                    listContainer.innerHTML = '<div class="p-10 text-center text-zinc-500">No channels available.</div>';
-                }
+                // Filter UK and US strictly
+                dataStore = data.channels.filter(c => c.code === 'us' || c.code === 'gb');
+                render(dataStore);
             } catch (e) {
-                listContainer.innerHTML = '<div class="p-10 text-center text-red-400 font-medium">Network Error</div>';
-            }
-        }
-
-        function selectChannel(ch) {
-            // Hide the idle screen
-            playerIdle.style.display = 'none';
-            
-            // Set source
-            player.src = ch.url;
-            
-            // Update UI
-            footerInfo.innerText = ch.name;
-            footerInfo.classList.remove('text-zinc-500');
-            footerInfo.classList.add('text-blue-400');
-            
-            activeIndicator.classList.remove('bg-zinc-800');
-            activeIndicator.classList.add('bg-green-500', 'animate-pulse');
-            
-            // Scroll to top to see player
-            window.scrollTo({top: 0, behavior: 'smooth'});
-
-            // Highlight in list
-            document.querySelectorAll('.channel-item').forEach(el => el.classList.remove('bg-zinc-900', 'border-blue-900'));
-            const activeEl = document.getElementById(`ch-${ch.id}`);
-            if (activeEl) {
-                activeEl.classList.add('bg-zinc-900', 'border-blue-900');
+                listContainer.innerHTML = '<div class="p-5 text-red-500">API Error</div>';
             }
         }
 
@@ -156,34 +78,38 @@
             listContainer.innerHTML = '';
             channels.forEach(ch => {
                 const div = document.createElement('div');
-                div.id = `ch-${ch.id}`;
-                div.className = 'channel-item flex items-center p-4 gap-4 cursor-pointer rounded-xl mx-2 mb-1 border border-transparent';
+                div.className = 'channel-item flex items-center p-3 gap-4 cursor-pointer';
                 div.innerHTML = `
-                    <div class="relative">
-                        <img src="${ch.image}" class="w-14 h-14 object-contain bg-zinc-900 rounded-lg border border-zinc-800 p-1" 
-                             onerror="this.src='https://via.placeholder.com/60?text=TV'">
+                    <img src="${ch.image}" class="w-12 h-12 object-contain bg-zinc-800 rounded">
+                    <div class="flex-1">
+                        <div class="font-bold text-sm">${ch.name}</div>
+                        <div class="text-xs text-zinc-500 uppercase">${ch.code === 'us' ? 'United States' : 'United Kingdom'}</div>
                     </div>
-                    <div class="flex-1 min-w-0">
-                        <div class="font-bold text-base text-zinc-100 truncate">${ch.name}</div>
-                        <div class="text-xs text-zinc-500 font-medium uppercase tracking-tight">United Kingdom</div>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <div class="w-2 h-2 rounded-full ${ch.status === 'online' ? 'bg-green-500' : 'bg-zinc-700'}"></div>
-                        <svg class="w-5 h-5 text-zinc-700" fill="currentColor" viewBox="0 0 20 20"><path d="M4.555 5.168A1 1 0 003 6.07v7.86a1 1 0 001.555.832l6.666-3.93a1 1 0 000-1.664l-6.666-3.93z"></path></svg>
-                    </div>
+                    <div class="w-2 h-2 rounded-full ${ch.status === 'online' ? 'bg-green-500' : 'bg-red-500'}"></div>
                 `;
-                div.onclick = () => selectChannel(ch);
+                div.onclick = () => {
+                    noSignal.style.display = 'none';
+                    player.src = ch.url;
+                    footerInfo.innerText = "STREAMING: " + ch.name;
+                    window.scrollTo({top: 0, behavior: 'smooth'});
+                };
                 listContainer.appendChild(div);
             });
         }
 
         function filter() {
             const s = searchInput.value.toLowerCase();
-            const filtered = dataStore.filter(ch => ch.name.toLowerCase().includes(s));
+            const c = countrySelect.value;
+            const filtered = dataStore.filter(ch => {
+                const matchesSearch = ch.name.toLowerCase().includes(s);
+                const matchesCountry = c === 'all' || ch.code === c;
+                return matchesSearch && matchesCountry;
+            });
             render(filtered);
         }
 
         searchInput.addEventListener('input', filter);
+        countrySelect.addEventListener('change', filter);
 
         load();
     </script>
