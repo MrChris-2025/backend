@@ -157,7 +157,7 @@
         </div>
         
         <div class="relative">
-            <input type="text" id="search" placeholder="Search channels..." 
+            <input type="text" id="search" placeholder="Search by name..." 
                 class="w-full bg-[#1c1429] border border-purple-500/10 rounded-xl py-3 px-11 text-sm text-white placeholder-zinc-600 focus:bg-[#231a33] focus:border-purple-500/30 outline-none transition-all">
             <svg class="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
@@ -204,6 +204,7 @@
 
         let dataStore = [];
         let currentRegion = 'gb'; // Set UK as default
+        let selectedChannelId = null; // Track selected channel
 
         async function init() {
             try {
@@ -219,7 +220,9 @@
                         'sport', 'racing', 'football', 'liga', 'espn', 'nba', 
                         'astro', 'nfl', 'nhl', 'tennis', 'sec', 'red bull', 
                         'mlb', 'golf', 'goltv', 'soccer', 'deportes', 'cricket', 
-                        'acc network', 'hubpremier', 'hub premier'
+                        'acc network', 'hubpremier', 'hub premier', 'dazn', 'btn', 
+                        'cbc news', 'cnbc', 'msg', 'telemundo', 'univision', 'wwe',
+                        'yes network'
                     ];
 
                     // Check if channel name contains any excluded keywords
@@ -252,16 +255,19 @@
         function selectChannel(ch) {
             player.src = ch.url;
             footerInfo.innerText = ch.name;
+            selectedChannelId = ch.id; // Store ID
             
             // UI Updates
             statusDot.classList.replace('bg-zinc-700', 'bg-purple-500');
             statusContainer.classList.add('pulse-ring');
             liveTag.classList.remove('hidden');
             
-            // Highlight active channel without scrolling
+            // Highlight
             document.querySelectorAll('.channel-card').forEach(el => el.classList.remove('active'));
             const activeEl = document.getElementById(`ch-${ch.id}`);
             if (activeEl) activeEl.classList.add('active');
+            
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
         function renderFiltered() {
@@ -280,7 +286,9 @@
             channels.forEach(ch => {
                 const div = document.createElement('div');
                 div.id = `ch-${ch.id}`;
-                div.className = 'channel-card flex items-center p-3.5 gap-4 rounded-2xl cursor-pointer';
+                // Apply active class if this channel is the one currently selected
+                const isActive = selectedChannelId === ch.id ? 'active' : '';
+                div.className = `channel-card flex items-center p-3.5 gap-4 rounded-2xl cursor-pointer ${isActive}`;
                 
                 const logo = ch.image && ch.image.trim() !== "" 
                     ? `<img src="${ch.image}" class="max-w-[85%] max-h-[85%] object-contain" onerror="this.remove()">` 
@@ -320,3 +328,4 @@
     </script>
 </body>
 </html>
+
