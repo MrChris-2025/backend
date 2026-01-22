@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Stream</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background: #000; color: #fff; font-family: sans-serif; }
+        .player-box { position: sticky; top: 0; z-index: 100; background: #000; width: 100%; aspect-ratio: 16/9; border-bottom: 1px solid #333; }
+        iframe { width: 100%; height: 100%; border: none; }
+        .channel-item { border-bottom: 1px solid #222; }
+        .channel-item:active { background: #111; }
+        footer { position: fixed; bottom: 0; width: 100%; background: #0a0a0a; border-top: 1px solid #333; height: 60px; display: flex; align-items: center; padding: 0 15px; }
+    </style>
+</head>
+<body class="pb-20">
+
+    <!-- 1. Player First -->
+    <div class="player-box">
+        <iframe id="vid-player" src="" allowfullscreen sandbox="allow-same-origin allow-scripts"></iframe>
+        <div id="no-signal" class="absolute inset-0 flex items-center justify-center text-gray-600 bg-black pointer-events-none">
+            NO SIGNAL SELECTED
+        </div>
+    </div>
+
+    <!-- 2. Search -->
+    <div class="p-3">
+        <input type="text" id="search" placeholder="Search Channels..." 
+            class="w-full bg-zinc-900 border border-zinc-700 rounded p-3 text-white outline-none focus:border-blue-500">
+    </div>
+
+    <!-- 3. Country Dropdown -->
+    <div class="px-3 pb-3">
+        <select id="country" class="w-full bg-zinc-900 border border-zinc-700 rounded p-3 text-white outline-none">
+            <option value="all">UK & US (All)</option>
+            <option value="gb">United Kingdom</option>
+            <option value="us">United States</option>
+        </select>
+    </div>
+
+    <!-- 4. Stacked Channels -->
+    <div id="list" class="flex flex-col">
+        <div class="p-10 text-center text-zinc-500">Loading Data...</div>
+    </div>
+
+    <!-- 5. Footer (Show/Channel Info) -->
+    <footer>
+        <div class="flex flex-col truncate">
+            <span class="text-[10px] text-zinc-500 font-bold uppercase">Source: Live TV</span>
+            <span id="current-info" class="text-sm font-medium truncate italic text-blue-400">Select a channel to play...</span>
+        </div>
+    </footer>
+
+    <script>
+        const player = document.getElementById('vid-player');
+        const noSignal = document.getElementById('no-signal');
+        const listContainer = document.getElementById('list');
+        const searchInput = document.getElementById('search');
+        const countrySelect = document.getElementById('country');
+        const footerInfo = document.getElementById('current-info');
+
+        let dataStore = [];
+
+        async function load() {
+            try {
+                const res = await fetch('https://api.cdn-live.tv/api/v1/channels/?user=cdnlivetv&plan=free');
+                const data = await res.json();
+                // Filter UK and US strictly
+                dataStore = data.channels.filter(c => c.code === 'us' || c.code === 'gb');
+                render(dataStore);
+            } catch (e) {
+                listContainer.innerHTML = '<div class="p-5 text-red-500">API Error</div>';
+            }
+        }
+
+        function render(channels) {
+            listContainer.innerHTML = '';
+            channels.forEach(ch => {
+                const div = document.createElement('div');
+                div.className = 'channel-item flex items-center p-3 gap-4 cursor-pointer';
+                div.innerHTML = `
+                    <img src="${ch.image}" class="w-12 h-12 object-contain bg-zinc-800 rounded">
+                    <div class="flex-1">
+                        <div class="font-bold text-sm">${ch.name}</div>
+                        <div class="text-xs text-zinc-500 uppercase">${ch.code === 'us' ? 'United States' : 'United Kingdom'}</div>
+                    </div>
+                    <div class="w-2 h-2 rounded-full ${ch.status === 'online' ? 'bg-green-500' : 'bg-red-500'}"></div>
+                `;
+                div.onclick = () => {
+                    noSignal.style.display = 'none';
+                    player.src = ch.url;
+                    footerInfo.innerText = "STREAMING: " + ch.name;
+                    window.scrollTo({top: 0, behavior: 'smooth'});
+                };
+                listContainer.appendChild(div);
+            });
+        }
+
+        function filter() {
+            const s = searchInput.value.toLowerCase();
+            const c = countrySelect.value;
+            const filtered = dataStore.filter(ch => {
+                const matchesSearch = ch.name.toLowerCase().includes(s);
+                const matchesCountry = c === 'all' || ch.code === c;
+                return matchesSearch && matchesCountry;
+            });
+            render(filtered);
+        }
+
+        searchInput.addEventListener('input', filter);
+        countrySelect.addEventListener('change', filter);
+
+        load();
+    </script>
+</body>
+</html>
+
