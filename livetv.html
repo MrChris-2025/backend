@@ -63,8 +63,8 @@
         }
 
         .channel-card.active {
-            border-color: var(--accent);
-            background: rgba(168, 85, 247, 0.1);
+            border-color: var(--accent) !important;
+            background: rgba(168, 85, 247, 0.15) !important;
             box-shadow: 0 0 20px rgba(168, 85, 247, 0.15);
         }
 
@@ -203,7 +203,8 @@
         const countTag = document.getElementById('count-tag');
 
         let dataStore = [];
-        let currentRegion = 'gb'; // Set UK as default
+        let currentRegion = 'gb'; 
+        let currentChannelId = null;
 
         async function init() {
             try {
@@ -214,7 +215,6 @@
                     const name = c.name.toLowerCase();
                     const code = c.code.toLowerCase();
                     
-                    // Exclusion List for Sports and specific Leagues
                     const excludedKeywords = [
                         'sport', 'racing', 'football', 'liga', 'espn', 'nba', 
                         'astro', 'nfl', 'nhl', 'tennis', 'sec', 'red bull', 
@@ -222,9 +222,7 @@
                         'acc network', 'hubpremier', 'hub premier'
                     ];
 
-                    // Check if channel name contains any excluded keywords
                     const isExcluded = excludedKeywords.some(keyword => name.includes(keyword));
-                    
                     const isSkyNews = name.includes('sky news');
 
                     if (code !== 'gb' && code !== 'us') return false;
@@ -252,16 +250,25 @@
         function selectChannel(ch) {
             player.src = ch.url;
             footerInfo.innerText = ch.name;
+            currentChannelId = ch.id;
             
-            // UI Updates
+            // UI Status Updates
             statusDot.classList.replace('bg-zinc-700', 'bg-purple-500');
             statusContainer.classList.add('pulse-ring');
             liveTag.classList.remove('hidden');
             
-            // Highlight active channel without scrolling
-            document.querySelectorAll('.channel-card').forEach(el => el.classList.remove('active'));
-            const activeEl = document.getElementById(`ch-${ch.id}`);
-            if (activeEl) activeEl.classList.add('active');
+            // Update highlights without scrolling
+            updateHighlights();
+        }
+
+        function updateHighlights() {
+            document.querySelectorAll('.channel-card').forEach(el => {
+                if (el.id === `ch-${currentChannelId}`) {
+                    el.classList.add('active');
+                } else {
+                    el.classList.remove('active');
+                }
+            });
         }
 
         function renderFiltered() {
@@ -281,6 +288,11 @@
                 const div = document.createElement('div');
                 div.id = `ch-${ch.id}`;
                 div.className = 'channel-card flex items-center p-3.5 gap-4 rounded-2xl cursor-pointer';
+                
+                // Keep active state if this channel is currently playing
+                if (currentChannelId === ch.id) {
+                    div.classList.add('active');
+                }
                 
                 const logo = ch.image && ch.image.trim() !== "" 
                     ? `<img src="${ch.image}" class="max-w-[85%] max-h-[85%] object-contain" onerror="this.remove()">` 
