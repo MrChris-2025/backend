@@ -22,6 +22,7 @@
             transition: background 0.2s;
         }
         .channel-item:active { background: #1a1a1a; }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; }
         
         /* Custom Scrollbar */
         ::-webkit-scrollbar { width: 4px; }
@@ -41,25 +42,13 @@
             padding: 0 20px; 
             z-index: 100;
         }
-        
-        #player-overlay {
-            background: linear-gradient(to bottom, transparent, rgba(0,0,0,0.8));
-            pointer-events: none;
-        }
     </style>
 </head>
 <body class="pb-24">
 
     <!-- Video Player -->
-    <div class="player-box overflow-hidden">
+    <div class="player-box">
         <iframe id="vid-player" src="about:blank" allowfullscreen sandbox="allow-same-origin allow-scripts"></iframe>
-        <!-- Idle Overlay -->
-        <div id="player-idle" class="absolute inset-0 flex flex-col items-center justify-center bg-zinc-950 text-zinc-500">
-            <svg class="w-12 h-12 mb-2 opacity-20" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M21 3H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h5v2h8v-2h5c1.1 0 1.99-.9 1.99-2L23 5c0-1.1-.9-2-2-2zm0 14H3V5h18v12z"/>
-            </svg>
-            <p class="text-xs font-bold uppercase tracking-widest opacity-40">Select a channel to begin</p>
-        </div>
     </div>
 
     <!-- Search Section -->
@@ -77,24 +66,23 @@
     <div id="list" class="flex flex-col px-2">
         <div class="p-20 text-center">
             <div class="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500 mb-4"></div>
-            <p class="text-zinc-500 font-medium text-sm">Synchronizing UK Streams...</p>
+            <p class="text-zinc-500 font-medium">Fetching UK Streams...</p>
         </div>
     </div>
 
     <!-- Footer Info -->
     <footer>
         <div class="flex items-center gap-3 w-full">
-            <div id="active-indicator" class="w-2.5 h-2.5 rounded-full bg-zinc-800"></div>
+            <div id="active-indicator" class="w-2 h-2 rounded-full bg-zinc-700"></div>
             <div class="flex flex-col truncate">
-                <span class="text-[10px] text-zinc-600 font-bold uppercase tracking-widest">Live Status</span>
-                <span id="current-info" class="text-sm font-semibold truncate text-zinc-500">Standby Mode</span>
+                <span class="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">Currently Playing</span>
+                <span id="current-info" class="text-sm font-semibold truncate text-zinc-300">No channel selected</span>
             </div>
         </div>
     </footer>
 
     <script>
         const player = document.getElementById('vid-player');
-        const playerIdle = document.getElementById('player-idle');
         const listContainer = document.getElementById('list');
         const searchInput = document.getElementById('search');
         const footerInfo = document.getElementById('current-info');
@@ -107,49 +95,41 @@
                 const res = await fetch('https://api.cdn-live.tv/api/v1/channels/?user=cdnlivetv&plan=free');
                 const data = await res.json();
                 
-                // UK Only, Filter Sports and HubPremier
+                // 1. Strictly UK 
+                // 2. Hide Sports
+                // 3. Hide HubPremier
                 dataStore = data.channels.filter(c => {
                     const isUK = c.code === 'gb';
                     const name = c.name.toLowerCase();
-                    const isSports = name.includes('sport') || name.includes('racing') || name.includes('football') || name.includes('arena');
+                    const isSports = name.includes('sport') || name.includes('racing') || name.includes('football');
                     const isHub = name.includes('hubpremier') || name.includes('hub premier');
+                    
                     return isUK && !isSports && !isHub;
                 });
 
                 if (dataStore.length > 0) {
                     render(dataStore);
+                    // Auto-load first channel to avoid blank player placeholder
+                    selectChannel(dataStore[0]);
                 } else {
-                    listContainer.innerHTML = '<div class="p-10 text-center text-zinc-500">No channels available.</div>';
+                    listContainer.innerHTML = '<div class="p-10 text-center text-zinc-500">No matching channels found.</div>';
                 }
             } catch (e) {
-                listContainer.innerHTML = '<div class="p-10 text-center text-red-400 font-medium">Network Error</div>';
+                listContainer.innerHTML = '<div class="p-10 text-center text-red-400 font-medium">Unable to load stream data.</div>';
             }
         }
 
         function selectChannel(ch) {
-            // Hide the idle screen
-            playerIdle.style.display = 'none';
-            
-            // Set source
             player.src = ch.url;
-            
-            // Update UI
             footerInfo.innerText = ch.name;
-            footerInfo.classList.remove('text-zinc-500');
             footerInfo.classList.add('text-blue-400');
-            
-            activeIndicator.classList.remove('bg-zinc-800');
+            activeIndicator.classList.remove('bg-zinc-700');
             activeIndicator.classList.add('bg-green-500', 'animate-pulse');
             
-            // Scroll to top to see player
-            window.scrollTo({top: 0, behavior: 'smooth'});
-
-            // Highlight in list
-            document.querySelectorAll('.channel-item').forEach(el => el.classList.remove('bg-zinc-900', 'border-blue-900'));
+            // Highlight active item in list if needed
+            document.querySelectorAll('.channel-item').forEach(el => el.classList.remove('bg-zinc-900'));
             const activeEl = document.getElementById(`ch-${ch.id}`);
-            if (activeEl) {
-                activeEl.classList.add('bg-zinc-900', 'border-blue-900');
-            }
+            if (activeEl) activeEl.classList.add('bg-zinc-900');
         }
 
         function render(channels) {
@@ -157,22 +137,25 @@
             channels.forEach(ch => {
                 const div = document.createElement('div');
                 div.id = `ch-${ch.id}`;
-                div.className = 'channel-item flex items-center p-4 gap-4 cursor-pointer rounded-xl mx-2 mb-1 border border-transparent';
+                div.className = 'channel-item flex items-center p-4 gap-4 cursor-pointer rounded-xl mx-2 mb-1';
                 div.innerHTML = `
                     <div class="relative">
                         <img src="${ch.image}" class="w-14 h-14 object-contain bg-zinc-900 rounded-lg border border-zinc-800 p-1" 
                              onerror="this.src='https://via.placeholder.com/60?text=TV'">
+                        <div class="absolute -bottom-1 -right-1 w-3 h-3 border-2 border-[#050505] rounded-full ${ch.status === 'online' ? 'bg-green-500' : 'bg-red-500'}"></div>
                     </div>
                     <div class="flex-1 min-w-0">
                         <div class="font-bold text-base text-zinc-100 truncate">${ch.name}</div>
-                        <div class="text-xs text-zinc-500 font-medium uppercase tracking-tight">United Kingdom</div>
+                        <div class="text-xs text-zinc-500 font-medium">United Kingdom • Free View</div>
                     </div>
-                    <div class="flex items-center gap-2">
-                        <div class="w-2 h-2 rounded-full ${ch.status === 'online' ? 'bg-green-500' : 'bg-zinc-700'}"></div>
-                        <svg class="w-5 h-5 text-zinc-700" fill="currentColor" viewBox="0 0 20 20"><path d="M4.555 5.168A1 1 0 003 6.07v7.86a1 1 0 001.555.832l6.666-3.93a1 1 0 000-1.664l-6.666-3.93z"></path></svg>
+                    <div class="text-zinc-600">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M4.555 5.168A1 1 0 003 6.07v7.86a1 1 0 001.555.832l6.666-3.93a1 1 0 000-1.664l-6.666-3.93z"></path></svg>
                     </div>
                 `;
-                div.onclick = () => selectChannel(ch);
+                div.onclick = () => {
+                    selectChannel(ch);
+                    window.scrollTo({top: 0, behavior: 'smooth'});
+                };
                 listContainer.appendChild(div);
             });
         }
@@ -185,6 +168,7 @@
 
         searchInput.addEventListener('input', filter);
 
+        // Start app
         load();
     </script>
 </body>
