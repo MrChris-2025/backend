@@ -423,7 +423,7 @@
             border-radius: 16px;
             padding: 1rem;
             max-width: 95vw;
-            width: 700px;
+            width: 400px;
             max-height: 90vh;
             position: relative;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
@@ -443,14 +443,6 @@
             cursor: pointer;
             z-index: 10;
             transition: background 0.2s;
-        }
-
-        #heartVideoModal video {
-            width: 100%;
-            height: auto;
-            max-height: 80vh;
-            display: block;
-            border-radius: 12px;
         }
 
         /* Mobile-specific styles for better layout */
@@ -869,11 +861,15 @@
     <div id="heartVideoModal">
         <div class="modal-content-heart">
             <button id="heartModalCloseBtn" class="close-btn-heart">&times;</button>
-            <video id="heatherSecretVideo" controls autoplay loop playsinline>
-                <source src="https://vidmoly.net/embed-d6yiy4d6zobu.html">
-                
-                <p class="text-white p-4">Your browser does not support the video tag or the QuickTime format (.mov).</p>
-            </video>
+            <div class="relative w-full h-0 pb-[177.77%] rounded-lg overflow-hidden bg-black">
+                <iframe id="heatherSecretYouTube" 
+                    class="absolute top-0 left-0 w-full h-full"
+                    src="https://www.youtube.com/embed/88MgWvnZD5M?enablejsapi=1&rel=0" 
+                    frameborder="0" 
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                    allowfullscreen>
+                </iframe>
+            </div>
         </div>
     </div>
 
@@ -1951,17 +1947,18 @@
             }
         }
 
-        // NEW FUNCTIONS FOR HEART VIDEO MODAL
+        // UPDATED FUNCTIONS FOR HEART YOUTUBE VIDEO
         function showHeartVideoModal() {
             heartVideoModal.style.display = 'flex';
-            heatherSecretVideo.play().catch(error => {
-                console.warn("Autoplay failed:", error);
-            });
+            // Target the iframe to play
+            const ytPlayer = document.getElementById('heatherSecretYouTube');
+            ytPlayer.contentWindow.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
         }
 
         function hideHeartVideoModal() {
-            heatherSecretVideo.pause();
-            heatherSecretVideo.currentTime = 0;
+            // Target the iframe to pause
+            const ytPlayer = document.getElementById('heatherSecretYouTube');
+            ytPlayer.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
             heartVideoModal.style.display = 'none';
         }
 
@@ -2261,4 +2258,3 @@
 </body>
 
 </html>
-
